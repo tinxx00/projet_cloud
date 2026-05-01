@@ -89,6 +89,36 @@ Champs calculés en sortie:
 - `delta_pct = delta_abs / price_previous_close * 100`
 - `direction` (`up`, `down`, `flat`, `unknown`)
 
+## 9) Module ML - Signal directionnel court terme
+Le dashboard inclut un onglet "🤖 Analyse ML" qui charge un modèle entraîné
+sur historique long (yfinance) et appliqué soit sur les données du consumer
+en live, soit en backtest sur historique ancien.
+
+Entraîner le modèle (walk-forward CV, sélection automatique entre logreg et GBDT) :
+```bash
+PYTHONPATH=src python -m ml.train --symbols AAPL MSFT TSLA GOOGL AMZN \
+    --period 10y --interval 1d --horizon 5 --threshold-bps 25
+```
+
+Backtester out-of-sample (split temporel : 5 premières années en train, le reste en test) :
+```bash
+PYTHONPATH=src python -m ml.backtest --symbols AAPL MSFT TSLA GOOGL AMZN \
+    --period 10y --train-years 5 --threshold 0.55 --cost-bps 2 \
+    --horizon 5 --threshold-bps-label 25
+```
+
+Le backtest n'utilise jamais le modèle de production (réentraîné sur tout l'historique)
+pour éviter le data leakage : il réentraîne un modèle frais sur la fenêtre d'entraînement
+puis prédit uniquement sur la fenêtre future, tient compte des coûts de transaction
+et compare le P&L de la stratégie au buy-and-hold.
+
+Sorties :
+- `data/models/direction_model.joblib`
+- `data/models/training_report.json`
+- `data/models/oof_predictions.csv`
+- `data/models/backtest_<SYMBOL>.csv`
+- `data/models/backtest_summary.json`
+
 ## Arborescence
 - `src/producer/main.py`: boucle principale de streaming
 - `src/producer/finnhub_client.py`: client Finnhub
@@ -101,4 +131,9 @@ Champs calculés en sortie:
 - `src/consumer/csv_sink.py`: stockage des données traitées
 - `src/consumer/config.py`: configuration du consumer
 - `src/dashboard/app.py`: dashboard Streamlit (maquette)
+- `src/ml/features.py`: indicateurs techniques (RSI, MACD, EMA, Bollinger, ATR, momentum)
+- `src/ml/dataset.py`: téléchargement et cache de l'historique yfinance
+- `src/ml/train.py`: entraînement avec walk-forward CV + comparaison logreg vs GBDT
+- `src/ml/backtest.py`: backtest out-of-sample avec coûts de transaction
+- `src/ml/predict.py`: prédiction live à partir des données consumer
 - `docker-compose.yml`: Kafka, ZooKeeper, Kafka UI
