@@ -43,6 +43,7 @@ pages = {
     "pipeline":  st.Page(str(VIEWS_DIR / "pipeline.py"),  title="Pipeline",       icon="⚙️"),
     "recommend": st.Page(str(VIEWS_DIR / "recommend.py"), title="Recommandations",icon="🎯"),
     "ml":        st.Page(str(VIEWS_DIR / "ml.py"),        title="Signal IA",      icon="🤖"),
+    "guide":     st.Page(str(VIEWS_DIR / "guide.py"),     title="Guide",          icon="📚"),
     "about":     st.Page(str(VIEWS_DIR / "about.py"),     title="À propos",       icon="ℹ️"),
 }
 
@@ -71,7 +72,7 @@ nav = st.navigation(
         "Plateforme": [pages["home"], pages["market"], pages["analysis"], pages["pipeline"]],
         "Personnalisation": [pages["recommend"]],
         "Modèle": [pages["ml"]],
-        "Infos": [pages["about"]],
+        "Aide": [pages["guide"], pages["about"]],
     },
     position="sidebar",
 )

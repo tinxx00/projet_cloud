@@ -66,14 +66,16 @@ def render() -> None:
     # ---- Two-column block: navigation cards + pipeline status ----
     left, right = st.columns([1.4, 1])
     with left:
-        theme.section_header("Naviguer", "Choisis une vue dans le menu de gauche, ou utilise les raccourcis.")
+        theme.section_header("Naviguer", "Choisis une vue dans le menu de gauche. Nouveau ici ? Va voir le 📚 Guide.")
         cards = [
-            ("📈", "Marché", "Suivi temps réel des prix, chandeliers, KPIs par symbole."),
+            ("📈", "Marché", "Prix en temps réel, chandeliers, KPIs par symbole."),
             ("🔬", "Analyse", "Variations, distributions, leaderboard up/down."),
-            ("⚙️", "Pipeline", "Santé du producer, consumer et fichiers CSV."),
-            ("🤖", "Signal IA", "Modèle directionnel + backtest out-of-sample."),
+            ("⚙️", "Pipeline", "Flux de données Finnhub→Kafka→Consumer + latences."),
+            ("🎯", "Recommandations", "Algo personnalisé qui apprend ton profil de risque."),
+            ("🤖", "Signal IA", "Modèle directionnel + backtest + scoring live."),
+            ("📚", "Guide", "Comment utiliser chaque section du dashboard."),
         ]
-        # 2x2 grid via columns
+        # 3x2 grid via columns
         a, b = st.columns(2)
         for i, (emoji, title, desc) in enumerate(cards):
             target = a if i % 2 == 0 else b
