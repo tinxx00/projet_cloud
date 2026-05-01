@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Optional
 
 import requests
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 
 class RateLimitError(Exception):
-    def __init__(self, retry_after_seconds: float | None = None) -> None:
+    def __init__(self, retry_after_seconds: Optional[float] = None) -> None:
         super().__init__("Finnhub rate limit reached")
         self.retry_after_seconds = retry_after_seconds
 

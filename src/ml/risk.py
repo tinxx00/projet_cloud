@@ -14,6 +14,8 @@ Le profil utilisateur ∈ [0, 1] :
 from __future__ import annotations
 
 import numpy as np
+from __future__ import annotations
+
 import pandas as pd
 
 from ml.dataset import fetch_history, load_cached, save_cached
