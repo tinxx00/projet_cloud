@@ -227,42 +227,19 @@ def _live_tape(df: pd.DataFrame, n: int = 12) -> None:
         return
 
     sub = df.dropna(subset=["symbol", "price_current"]).sort_values("ingested_at").tail(n)
-    rows_html = []
-    for _, row in sub.iloc[::-1].iterrows():
-        ts = row.get("ingested_at")
-        ts_str = ts.strftime("%H:%M:%S") if pd.notna(ts) else "—"
-        direction = row.get("direction", "unknown")
-        delta_pct = row.get("delta_pct")
-        if direction == "up":
-            badge_color, arrow = theme.COLORS["up"], "▲"
-        elif direction == "down":
-            badge_color, arrow = theme.COLORS["down"], "▼"
-        else:
-            badge_color, arrow = theme.COLORS["text_muted"], "•"
-        delta_str = f"{delta_pct:+.2f}%" if pd.notna(delta_pct) else "—"
-
-        rows_html.append(
-            f"""
-            <div style="display:flex;align-items:center;justify-content:space-between;
-                        padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);
-                        font-family:ui-monospace,Menlo,monospace;font-size:0.85rem;">
-              <span style="color:var(--text-muted);width:78px;">{ts_str}</span>
-              <span style="font-weight:700;color:var(--text);width:70px;">{row.get('symbol','?')}</span>
-              <span style="color:var(--text);width:90px;text-align:right;">
-                {row['price_current']:.2f}
-              </span>
-              <span style="color:{badge_color};font-weight:700;width:90px;text-align:right;">
-                {arrow} {delta_str}
-              </span>
-              <span class="badge badge-flat" style="font-size:0.7rem;">
-                {row.get('ingestion_mode','—')}
-              </span>
-            </div>
-            """
-        )
-    st.markdown(
-        f'<div class="card" style="padding:0;overflow:hidden;">{"".join(rows_html)}</div>',
-        unsafe_allow_html=True,
+    show_cols = [c for c in ["ingested_at", "symbol", "price_current", "delta_pct", "direction", "ingestion_mode"] if c in sub.columns]
+    st.dataframe(
+        sub[show_cols].iloc[::-1].reset_index(drop=True),
+        use_container_width=True,
+        height=350,
+        column_config={
+            "ingested_at": st.column_config.DatetimeColumn("Heure", format="HH:mm:ss"),
+            "symbol": st.column_config.TextColumn("Symbole", width="small"),
+            "price_current": st.column_config.NumberColumn("Prix", format="%.2f"),
+            "delta_pct": st.column_config.NumberColumn("Δ %", format="%+.2f%%"),
+            "direction": st.column_config.TextColumn("Dir.", width="small"),
+            "ingestion_mode": st.column_config.TextColumn("Source", width="small"),
+        },
     )
 
 

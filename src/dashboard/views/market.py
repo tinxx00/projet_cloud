@@ -94,9 +94,14 @@ def _price_chart(df: pd.DataFrame, symbols: list[str]) -> None:
         theme.empty_state("📉", "Pas de série exploitable",
                           "Aucune mesure de prix valide sur la fenêtre sélectionnée.")
         return
+    
     fig = px.line(
-        chart_df, x="ingested_at", y="price_current", color="symbol",
-        line_shape="spline", render_mode="webgl",
+    chart_df,
+    x="ingested_at",
+    y="price_current",
+    color="symbol",
+    line_shape="linear",
+    render_mode="webgl",
     )
     fig.update_traces(line=dict(width=2))
     fig.update_layout(**theme.plotly_layout(

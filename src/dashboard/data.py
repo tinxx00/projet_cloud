@@ -47,13 +47,28 @@ def _file_signature(path: Path) -> tuple[float, int]:
     return (stat.st_mtime, stat.st_size)
 
 
+BACKUP_FIELDNAMES = [
+    "symbol", "price_current", "price_high", "price_low", "price_open",
+    "price_previous_close", "finnhub_timestamp", "ingested_at", "source",
+]
+
+
 @st.cache_data(show_spinner=False, ttl=2)
 def _load_csv(path_str: str, signature: tuple[float, int]) -> pd.DataFrame:
     """Internal cached loader. ``signature`` makes the cache filesystem-aware."""
     path = Path(path_str)
     if not path.exists() or signature[1] == 0:
         return pd.DataFrame()
-    df = pd.read_csv(path)
+    # quotes_backup.csv n'a pas de header — on lui donne les noms de colonnes
+    try:
+        first = pd.read_csv(path, nrows=1, header=0)
+        has_header = "symbol" in first.columns
+    except Exception:
+        has_header = False
+    if has_header:
+        df = pd.read_csv(path)
+    else:
+        df = pd.read_csv(path, header=None, names=BACKUP_FIELDNAMES[:], engine="python")
     if df.empty:
         return df
     for col in NUMERIC_COLS:
@@ -83,10 +98,12 @@ def dataset_status(path: Path) -> DatasetStatus:
         return DatasetStatus(path=path, exists=False, rows=0, last_update=None, file_size_bytes=0)
     df = load_quotes(path)
     last_update = None
-    if not df.empty and "ingested_at" in df.columns:
-        ts = df["ingested_at"].dropna()
-        if not ts.empty:
-            last_update = ts.max().to_pydatetime()
+    for col in ("processed_at", "ingested_at"):
+        if not df.empty and col in df.columns:
+            ts = df[col].dropna()
+            if not ts.empty:
+                last_update = ts.max().to_pydatetime()
+                break
     return DatasetStatus(
         path=path,
         exists=True,

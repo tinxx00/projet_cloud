@@ -7,44 +7,44 @@
       "GOOGL",
       "AMZN"
     ],
-    "period": "10y",
+    "period": "5y",
     "interval": "1d",
-    "horizon": 5,
-    "threshold_bps": 25.0,
+    "horizon": 1,
+    "threshold_bps": 5.0,
     "n_splits": 5,
     "use_cache": false
   },
   "summary": {
     "logreg": {
-      "accuracy_mean": 0.49733913884857284,
-      "precision_mean": 0.5349066936684984,
-      "recall_mean": 0.48637989867076026,
-      "f1_mean": 0.5036169442623091,
-      "roc_auc_mean": 0.5024887796165028,
-      "log_loss_mean": 0.7088609244685348,
-      "accuracy_std": 0.021369194799572104,
-      "precision_std": 0.049121620165055155,
-      "recall_std": 0.08149506588511667,
-      "f1_std": 0.046107576913474495,
-      "roc_auc_std": 0.02076683041821053,
-      "log_loss_std": 0.018826492859906892
+      "accuracy_mean": 0.5093228655544652,
+      "precision_mean": 0.5192254507421508,
+      "recall_mean": 0.5233869950799404,
+      "f1_mean": 0.519646295259738,
+      "roc_auc_mean": 0.5068493616987831,
+      "log_loss_mean": 0.7003264541251282,
+      "accuracy_std": 0.021421864526931376,
+      "precision_std": 0.013062849802538301,
+      "recall_std": 0.06020402597764419,
+      "f1_std": 0.02639087171530232,
+      "roc_auc_std": 0.021128431036772054,
+      "log_loss_std": 0.012206273002521348
     },
     "gbdt": {
-      "accuracy_mean": 0.5155297532656024,
-      "precision_mean": 0.5362484109983311,
-      "recall_mean": 0.7246581790093253,
-      "f1_mean": 0.6128381193256097,
-      "roc_auc_mean": 0.5147193565421168,
-      "log_loss_mean": 0.7179488998552024,
-      "accuracy_std": 0.022134782561581023,
-      "precision_std": 0.04820787883339877,
-      "recall_std": 0.06776922898416742,
-      "f1_std": 0.02004646201656266,
-      "roc_auc_std": 0.015102166279860453,
-      "log_loss_std": 0.023995001812733452
+      "accuracy_mean": 0.5207065750736016,
+      "precision_mean": 0.5274238803096223,
+      "recall_mean": 0.5781006211920355,
+      "f1_mean": 0.5489448852563932,
+      "roc_auc_mean": 0.5205920002114002,
+      "log_loss_mean": 0.7125921890701064,
+      "accuracy_std": 0.020801469927413236,
+      "precision_std": 0.016568446829904642,
+      "recall_std": 0.08429296167836738,
+      "f1_std": 0.042830410488383604,
+      "roc_auc_std": 0.018202934355132837,
+      "log_loss_std": 0.023694010398472454
     }
   },
   "best_model": "gbdt",
-  "n_rows": 12405,
-  "base_rate": 0.539621120515921
+  "n_rows": 6115,
+  "base_rate": 0.5102207686017989
 }

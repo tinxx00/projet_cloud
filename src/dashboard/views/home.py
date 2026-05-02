@@ -129,5 +129,10 @@ def render() -> None:
                 action="`PYTHONPATH=src python -m producer.main`",
             )
 
+    # Auto-refresh toutes les 5 secondes
+    import time
+    time.sleep(5)
+    st.rerun()
+
 
 render()

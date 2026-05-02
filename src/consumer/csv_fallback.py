@@ -25,6 +25,10 @@ class CsvBackupReader:
         if self._last_row_index > len(rows):
             self._last_row_index = 0
 
+        # Si on a atteint la fin du fichier, on repart du début (mode boucle)
+        if self._last_row_index >= len(rows):
+            self._last_row_index = 0
+
         new_rows = rows[self._last_row_index : self._last_row_index + max_rows]
         self._last_row_index += len(new_rows)
         return new_rows

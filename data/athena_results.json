@@ -1,0 +1,140 @@
+{
+  "Stats par symbole : prix moyen, variation, signaux UP/DOWN": [
+    {
+      "symbol": "AAPL",
+      "avg_price": "278.15",
+      "avg_delta_pct": "3.336",
+      "signals_up": "455",
+      "signals_down": "89",
+      "total": "1145"
+    },
+    {
+      "symbol": "TSLA",
+      "avg_price": "394.48",
+      "avg_delta_pct": "2.4599",
+      "signals_up": "416",
+      "signals_down": "127",
+      "total": "1140"
+    },
+    {
+      "symbol": "MSFT",
+      "avg_price": "413.34",
+      "avg_delta_pct": "1.2371",
+      "signals_up": "508",
+      "signals_down": "34",
+      "total": "1139"
+    },
+    {
+      "symbol": "AMZN",
+      "avg_price": "259.1",
+      "avg_delta_pct": "1.208",
+      "signals_up": "483",
+      "signals_down": "61",
+      "total": "1141"
+    },
+    {
+      "symbol": "GOOGL",
+      "avg_price": "368.34",
+      "avg_delta_pct": "0.2348",
+      "signals_up": "291",
+      "signals_down": "252",
+      "total": "1140"
+    },
+    {
+      "symbol": "TEST",
+      "avg_price": "100.0",
+      "avg_delta_pct": "",
+      "signals_up": "0",
+      "signals_down": "0",
+      "total": "1"
+    }
+  ],
+  "Top 5 hausses les plus fortes (delta_pct)": [
+    {
+      "symbol": "GOOGL",
+      "price_current": "372.72",
+      "delta_pct": "6.5097",
+      "direction": "up",
+      "ingested_at": "2026-04-30T13:51:26.387561+00:00"
+    },
+    {
+      "symbol": "GOOGL",
+      "price_current": "372.72",
+      "delta_pct": "6.5097",
+      "direction": "up",
+      "ingested_at": "2026-04-30T13:52:03.078337+00:00"
+    },
+    {
+      "symbol": "GOOGL",
+      "price_current": "371.52",
+      "delta_pct": "6.1668",
+      "direction": "up",
+      "ingested_at": "2026-04-30T14:04:15.211714+00:00"
+    },
+    {
+      "symbol": "GOOGL",
+      "price_current": "371.52",
+      "delta_pct": "6.1668",
+      "direction": "up",
+      "ingested_at": "2026-04-30T14:05:09.613995+00:00"
+    },
+    {
+      "symbol": "GOOGL",
+      "price_current": "371.52",
+      "delta_pct": "6.1668",
+      "direction": "up",
+      "ingested_at": "2026-04-30T14:04:51.303274+00:00"
+    }
+  ],
+  "Top 5 baisses les plus fortes": [
+    {
+      "symbol": "MSFT",
+      "price_current": "403.9",
+      "delta_pct": "-4.8438",
+      "direction": "down",
+      "ingested_at": "2026-04-30T13:56:49.384164+00:00"
+    },
+    {
+      "symbol": "MSFT",
+      "price_current": "403.9",
+      "delta_pct": "-4.8438",
+      "direction": "down",
+      "ingested_at": "2026-04-30T13:56:31.494609+00:00"
+    },
+    {
+      "symbol": "MSFT",
+      "price_current": "403.9",
+      "delta_pct": "-4.8438",
+      "direction": "down",
+      "ingested_at": "2026-04-30T13:57:07.447146+00:00"
+    },
+    {
+      "symbol": "MSFT",
+      "price_current": "404.37",
+      "delta_pct": "-4.7331",
+      "direction": "down",
+      "ingested_at": "2026-04-30T14:04:44.992884+00:00"
+    },
+    {
+      "symbol": "MSFT",
+      "price_current": "404.37",
+      "delta_pct": "-4.7331",
+      "direction": "down",
+      "ingested_at": "2026-04-30T14:04:26.957141+00:00"
+    }
+  ],
+  "Nombre de quotes par source (kafka vs csv_fallback)": [
+    {
+      "ingestion_mode": "",
+      "total": "2990"
+    },
+    {
+      "ingestion_mode": "kafka",
+      "total": "2708"
+    },
+    {
+      "ingestion_mode": "csv_backup",
+      "total": "8"
+    }
+  ]
+}
