@@ -17,8 +17,7 @@ import plotly.express as px
 import streamlit as st
 
 from dashboard import data as data_module
-from dashboard import feedback as fb_module
-from dashboard import theme
+from dashboard import auth, theme, feedback as fb_module
 
 # Ensure src/ is importable so `from ml import ...` works.
 _SRC = Path(__file__).resolve().parents[2]
@@ -160,31 +159,33 @@ def _profile_evolution_chart(initial_pref: float, fb_df: pd.DataFrame) -> None:
 
 
 def render() -> None:
-    theme.inject_theme()
+    theme.inject_css()
 
-    user_id = fb_module.get_or_create_user_id(st.session_state)
+    # Utilise le user connecté si disponible, sinon session anonyme
+    logged_user = auth.current_user()
+    if logged_user:
+        user_id = logged_user["id"]
+        saved_pref = float(logged_user.get("risk_pref", 0.5))
+    else:
+        user_id = fb_module.get_or_create_user_id(st.session_state)
+        saved_pref = float(st.session_state.get("initial_risk_pref", 0.5))
 
     # --- Sidebar: profile + reset --------------------------------------------
     with st.sidebar:
-        st.markdown("### 👤 Profil")
-        st.markdown(
-            f'<div class="card" style="padding:0.7rem 0.9rem;">'
-            f'<div class="card-title">Identifiant session</div>'
-            f'<div style="font-family:monospace;color:var(--primary);">{user_id}</div>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+        st.markdown("### 🎚 Profil de risque")
 
-        st.markdown("### 🎚 Profil initial")
         initial_pref = st.slider(
             "Tolérance au risque",
             0.0, 1.0,
-            value=float(st.session_state.get("initial_risk_pref", 0.5)),
+            value=saved_pref,
             step=0.05, format="%.2f",
-            help="0 = très prudent · 0.5 = équilibré · 1 = audacieux. "
-                 "Cette valeur sert de point de départ ; tes notations vont la faire évoluer.",
+            help="0 = très prudent · 0.5 = équilibré · 1 = audacieux.",
         )
+        # Persist dans le profil user
+        if logged_user and initial_pref != saved_pref:
+            auth.update_risk_pref(user_id, initial_pref)
         st.session_state["initial_risk_pref"] = initial_pref
+
         label, color = _profile_label(initial_pref)
         st.markdown(
             f'<div class="badge" style="background:{color}22;color:{color};font-size:0.85rem;'
