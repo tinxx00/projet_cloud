@@ -1,0 +1,115 @@
+{
+  "best_model": "et",
+  "best_auc": 0.524941012801348,
+  "best_params": {
+    "model": "et",
+    "n_est": 124,
+    "depth": 8,
+    "min_leaf": 16
+  },
+  "n_trials": 60,
+  "top10": [
+    {
+      "trial": 19,
+      "auc": 0.524941012801348,
+      "params": {
+        "model": "et",
+        "n_est": 124,
+        "depth": 8,
+        "min_leaf": 16
+      }
+    },
+    {
+      "trial": 27,
+      "auc": 0.5246022057727208,
+      "params": {
+        "model": "et",
+        "n_est": 116,
+        "depth": 8,
+        "min_leaf": 16
+      }
+    },
+    {
+      "trial": 25,
+      "auc": 0.5243877973599169,
+      "params": {
+        "model": "et",
+        "n_est": 112,
+        "depth": 8,
+        "min_leaf": 17
+      }
+    },
+    {
+      "trial": 24,
+      "auc": 0.5241490974428958,
+      "params": {
+        "model": "et",
+        "n_est": 105,
+        "depth": 8,
+        "min_leaf": 16
+      }
+    },
+    {
+      "trial": 20,
+      "auc": 0.5239091454094326,
+      "params": {
+        "model": "lgbm",
+        "n_est": 127,
+        "depth": 3,
+        "lr": 0.05726168592864793,
+        "subsample": 0.9809043843885259,
+        "colsample": 0.7147930326797747
+      }
+    },
+    {
+      "trial": 26,
+      "auc": 0.5236508641973237,
+      "params": {
+        "model": "et",
+        "n_est": 91,
+        "depth": 8,
+        "min_leaf": 16
+      }
+    },
+    {
+      "trial": 39,
+      "auc": 0.5236342560195392,
+      "params": {
+        "model": "et",
+        "n_est": 120,
+        "depth": 8,
+        "min_leaf": 15
+      }
+    },
+    {
+      "trial": 44,
+      "auc": 0.5235672635833751,
+      "params": {
+        "model": "et",
+        "n_est": 124,
+        "depth": 7,
+        "min_leaf": 19
+      }
+    },
+    {
+      "trial": 55,
+      "auc": 0.523428978819334,
+      "params": {
+        "model": "mlp",
+        "n_layers": 2,
+        "layer_size": 64,
+        "lr": 0.0011757641882763773
+      }
+    },
+    {
+      "trial": 28,
+      "auc": 0.5231306208841315,
+      "params": {
+        "model": "et",
+        "n_est": 51,
+        "depth": 9,
+        "min_leaf": 20
+      }
+    }
+  ]
+}
