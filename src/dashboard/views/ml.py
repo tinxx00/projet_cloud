@@ -17,6 +17,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
 from dashboard import data as data_module
@@ -28,8 +29,9 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 
-MODEL_PATH = Path("data/models/direction_model.joblib")
-REPORT_PATH = Path("data/models/training_report.json")
+MODEL_PATH   = Path("data/models/direction_model.joblib")
+REPORT_PATH  = Path("data/models/training_report.json")
+AUTOML_PATH  = Path("data/models/automl_report.json")
 
 
 # ---------------------------------------------------------------------------
@@ -69,6 +71,9 @@ def _model_card() -> dict:
     stat = MODEL_PATH.stat()
     bundle = _load_bundle((stat.st_mtime, stat.st_size))
 
+    # Support both dict bundle (old format) and plain Pipeline (new local format)
+    if not isinstance(bundle, dict):
+        bundle = {"model": bundle, "config": {}, "best_name": "GradientBoosting", "feature_columns": []}
     config = bundle.get("config", {})
     best = bundle.get("best_name", "?")
     feat_cols = bundle.get("feature_columns", [])
@@ -136,28 +141,123 @@ def _model_card() -> dict:
 # ---------------------------------------------------------------------------
 def _training_summary() -> None:
     if not REPORT_PATH.exists():
-        st.info("Pas de rapport d'entraînement (`training_report.json`).")
+        st.info("Pas de rapport d'entraînement.")
         return
     report = json.loads(REPORT_PATH.read_text())
-    best = report.get("best_model", "?")
-    summary = report.get("summary", {}).get(best, {})
+
+    if "best_model" in report:
+        best      = report.get("best_model", "?")
+        summary   = report.get("summary", {})
+        base_rate = report.get("base_rate", float("nan"))
+        n_rows    = report.get("n_rows", 0)
+    else:
+        best    = report.get("best_name", "?")
+        summary = {}
+        base_rate = float("nan")
+        n_rows  = report.get("n_samples", 0)
+
+    # ── KPI row ───────────────────────────────────────────────────────────────
+    best_stats = summary.get(best, {})
+    auc  = best_stats.get("roc_auc_mean", float("nan"))
+    acc  = best_stats.get("accuracy_mean", report.get("mean_cv_accuracy", float("nan")))
+    f1   = best_stats.get("f1_mean", float("nan"))
 
     c1, c2, c3, c4 = st.columns(4)
-    with c1: theme.kpi_card("Modèle retenu", best.upper(), sub="Sélection par AUC")
-    with c2: theme.kpi_card("ROC AUC",
-                            f"{summary.get('roc_auc_mean', float('nan')):.3f}",
-                            sub=f"σ ±{summary.get('roc_auc_std', 0):.3f}")
-    with c3: theme.kpi_card("Accuracy",
-                            f"{summary.get('accuracy_mean', float('nan')):.3f}",
-                            sub=f"σ ±{summary.get('accuracy_std', 0):.3f}")
-    with c4: theme.kpi_card("F1 score",
-                            f"{summary.get('f1_mean', float('nan')):.3f}",
-                            sub=f"σ ±{summary.get('f1_std', 0):.3f}")
+    with c1: theme.kpi_card("🏆 Meilleur modèle", best.upper() if best != "?" else "?", sub="Sélection automatique par AUC")
+    with c2: theme.kpi_card("ROC AUC", f"{auc:.4f}" if not pd.isna(auc) else "—", sub=f"σ ±{best_stats.get('roc_auc_std', 0):.4f}")
+    with c3: theme.kpi_card("Accuracy", f"{acc:.4f}" if not pd.isna(acc) else "—", sub=f"σ ±{best_stats.get('accuracy_std', 0):.4f}")
+    with c4: theme.kpi_card("Lignes dataset", f"{n_rows:,}", sub=f"Base rate {base_rate:.3f}" if not pd.isna(base_rate) else "—")
 
-    with st.expander("📋 Configuration & taux de base"):
-        st.json({"config": report.get("config"),
-                 "base_rate": report.get("base_rate"),
-                 "n_rows": report.get("n_rows")})
+    # ── Graphique comparaison modèles ─────────────────────────────────────────
+    if summary:
+        st.write("")
+        theme.section_header("📊 Comparaison des modèles", "Walk-forward CV — classement par AUC")
+
+        MODEL_LABELS = {
+            "logreg": "Logistic Regression", "gbdt": "Gradient Boosting",
+            "rf": "Random Forest", "mlp": "MLP Neural Net",
+            "ada": "AdaBoost", "et": "Extra Trees",
+            "xgb": "XGBoost", "lgbm": "LightGBM", "voting": "Voting Ensemble",
+        }
+        rows = []
+        for name, stats in summary.items():
+            rows.append({
+                "model": name,
+                "label": MODEL_LABELS.get(name, name.upper()),
+                "auc":   stats.get("roc_auc_mean", 0),
+                "acc":   stats.get("accuracy_mean", 0),
+                "f1":    stats.get("f1_mean", 0),
+                "best":  name == best,
+            })
+        df_m = pd.DataFrame(rows).sort_values("auc", ascending=True)
+
+        colors = [theme.COLORS["up"] if r else theme.COLORS["primary"] for r in df_m["best"]]
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            y=df_m["label"], x=df_m["auc"],
+            orientation="h",
+            marker_color=colors,
+            marker_line_width=0,
+            text=[f"{v:.4f}" for v in df_m["auc"]],
+            textposition="outside",
+            textfont=dict(size=12, color="#E2E8F0"),
+        ))
+        # ligne de référence aléatoire
+        fig.add_vline(x=0.5, line_dash="dot", line_color=theme.COLORS["warn"],
+                      annotation_text="Aléatoire (0.5)", annotation_position="top right",
+                      annotation_font_color=theme.COLORS["warn"])
+        fig.update_layout(**theme.plotly_layout(
+            height=max(280, len(df_m) * 44),
+            title=dict(text="ROC AUC — Walk-forward CV (5 folds)", x=0.0, font=dict(size=14)),
+            xaxis=dict(range=[0.48, max(df_m["auc"]) + 0.01], title="AUC moyen"),
+            yaxis_title=None,
+            showlegend=False,
+            margin=dict(l=10, r=60, t=45, b=10),
+        ))
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Tableau détaillé
+        with st.expander("📋 Tableau complet des métriques"):
+            disp = df_m[["label", "auc", "acc", "f1"]].copy()
+            disp.columns = ["Modèle", "AUC", "Accuracy", "F1"]
+            disp = disp.sort_values("AUC", ascending=False).reset_index(drop=True)
+            st.dataframe(
+                disp.style.highlight_max(subset=["AUC", "Accuracy", "F1"],
+                                         color="rgba(16,185,129,0.2)").format({
+                    "AUC": "{:.4f}", "Accuracy": "{:.4f}", "F1": "{:.4f}",
+                }),
+                use_container_width=True, hide_index=True,
+            )
+
+    # ── Section AutoML ────────────────────────────────────────────────────────
+    if AUTOML_PATH.exists():
+        st.write("")
+        theme.section_header("🧬 AutoML — Optuna", "Recherche automatique du meilleur modèle + hyperparamètres")
+        automl = json.loads(AUTOML_PATH.read_text())
+
+        ca1, ca2, ca3 = st.columns(3)
+        with ca1: theme.kpi_card("Meilleur modèle AutoML", automl.get("best_model", "?").upper(), sub="Sélection Optuna TPE")
+        with ca2: theme.kpi_card("Meilleur AUC", f"{automl.get('best_auc', 0):.4f}", sub=f"{automl.get('n_trials', 0)} trials explorés")
+        with ca3:
+            params = automl.get("best_params", {})
+            params_str = " · ".join(f"{k}={v}" for k, v in list(params.items())[:3] if k != "model")
+            theme.kpi_card("Hyperparamètres", params_str[:30] + "…" if len(params_str) > 30 else params_str, sub="Optimisés automatiquement")
+
+        top10 = automl.get("top10", [])
+        if top10:
+            df_top = pd.DataFrame([{
+                "Rang": i + 1,
+                "Modèle": t["params"].get("model", "?").upper(),
+                "AUC": t["auc"],
+                "Trial #": t["trial"],
+                "Params": str({k: v for k, v in t["params"].items() if k != "model"}),
+            } for i, t in enumerate(top10[:10])])
+            with st.expander(f"🔍 Top {len(df_top)} trials Optuna"):
+                st.dataframe(
+                    df_top.style.highlight_max(subset=["AUC"], color="rgba(16,185,129,0.2)")
+                              .format({"AUC": "{:.4f}"}),
+                    use_container_width=True, hide_index=True,
+                )
 
 
 # ---------------------------------------------------------------------------

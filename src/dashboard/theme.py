@@ -54,7 +54,7 @@ def plotly_layout(**overrides) -> dict:
 # ---------------------------------------------------------------------------
 _CSS = f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
 
 :root {{
     --bg: {COLORS["bg"]};
@@ -100,84 +100,253 @@ section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
 
 /* Custom card */
 .card {{
-    background: linear-gradient(180deg, var(--surface) 0%, var(--surface-alt) 100%);
+    background: linear-gradient(145deg, var(--surface) 0%, var(--surface-alt) 100%);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 1.2rem 1.4rem;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
-    transition: transform 120ms ease, border-color 120ms ease;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.22), 0 1px 0 rgba(255,255,255,0.03) inset;
+    transition: transform 150ms cubic-bezier(.2,.8,.2,1), border-color 150ms ease, box-shadow 150ms ease;
+    position: relative;
+    overflow: hidden;
+}}
+.card::before {{
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(34,211,238,0.3), transparent);
+    opacity: 0;
+    transition: opacity 150ms ease;
 }}
 .card:hover {{
-    border-color: rgba(34, 211, 238, 0.45);
-    transform: translateY(-2px);
+    border-color: rgba(34, 211, 238, 0.5);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(34,211,238,0.1);
 }}
+.card:hover::before {{ opacity: 1; }}
 
 .card-title {{
     color: var(--text-muted);
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     margin-bottom: 0.4rem;
 }}
 .card-value {{
     color: var(--text);
-    font-size: 1.6rem;
-    font-weight: 700;
+    font-size: 1.65rem;
+    font-weight: 800;
     line-height: 1.1;
+    letter-spacing: -0.02em;
 }}
 .card-sub {{
     color: var(--text-muted);
     font-size: 0.82rem;
     margin-top: 0.35rem;
 }}
-.card-delta-up {{ color: var(--up); font-weight: 600; }}
-.card-delta-down {{ color: var(--down); font-weight: 600; }}
+.card-delta-up   {{ color: var(--up);   font-weight: 700; }}
+.card-delta-down {{ color: var(--down); font-weight: 700; }}
 .card-delta-flat {{ color: var(--text-muted); font-weight: 600; }}
+
+/* Gradient text */
+.gtext {{
+    background: linear-gradient(135deg, #22D3EE 0%, #818CF8 50%, #A78BFA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}}
 
 /* Hero header */
 .hero {{
-    background: radial-gradient(1200px 240px at 0% 0%, rgba(34,211,238,0.18), transparent 60%),
-                linear-gradient(180deg, var(--surface) 0%, var(--surface-alt) 100%);
+    background:
+        radial-gradient(ellipse 80% 60% at 0% 0%, rgba(34,211,238,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(129,140,248,0.12) 0%, transparent 50%),
+        linear-gradient(180deg, var(--surface) 0%, var(--surface-alt) 100%);
     border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 1.6rem 1.8rem;
-    margin-bottom: 1.4rem;
+    border-radius: 20px;
+    padding: 1.8rem 2rem;
+    margin-bottom: 1.6rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
     flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
 }}
-.hero-title {{ font-size: 1.6rem; font-weight: 800; margin: 0; }}
-.hero-subtitle {{ color: var(--text-muted); font-size: 0.95rem; margin-top: 0.3rem; }}
+.hero::after {{
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(34,211,238,0.6) 50%, transparent 100%);
+}}
+.hero-title {{
+    font-size: 1.75rem;
+    font-weight: 900;
+    margin: 0;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #E2E8F0 0%, #94A3B8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}}
+.hero-subtitle {{ color: var(--text-muted); font-size: 0.95rem; margin-top: 0.4rem; line-height: 1.5; }}
 
 /* Status pill */
 .pill {{
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    padding: 0.32rem 0.7rem;
+    padding: 0.35rem 0.8rem;
     border-radius: 999px;
     font-size: 0.78rem;
-    font-weight: 600;
+    font-weight: 700;
     border: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.03);
+    letter-spacing: 0.04em;
 }}
 .pill-dot {{
-    width: 8px; height: 8px; border-radius: 50%;
-    box-shadow: 0 0 0 4px rgba(255,255,255,0.04);
-    animation: pulse 1.6s ease-in-out infinite;
+    width: 7px; height: 7px; border-radius: 50%;
+    animation: pulse 1.8s ease-in-out infinite;
 }}
-.pill-live   {{ color: var(--up);   border-color: rgba(16,185,129,0.4); }}
-.pill-live  .pill-dot {{ background: var(--up); }}
-.pill-idle   {{ color: var(--warn); border-color: rgba(245,158,11,0.4); }}
-.pill-idle  .pill-dot {{ background: var(--warn); }}
-.pill-offline{{ color: var(--down); border-color: rgba(239,68,68,0.4); }}
+.pill-live    {{ color: var(--up);   border-color: rgba(16,185,129,0.5); background: rgba(16,185,129,0.08); }}
+.pill-live   .pill-dot {{ background: var(--up); box-shadow: 0 0 6px var(--up); }}
+.pill-idle    {{ color: var(--warn); border-color: rgba(245,158,11,0.5);  background: rgba(245,158,11,0.08); }}
+.pill-idle   .pill-dot {{ background: var(--warn); }}
+.pill-offline {{ color: var(--down); border-color: rgba(239,68,68,0.5);  background: rgba(239,68,68,0.08); }}
 .pill-offline .pill-dot {{ background: var(--down); animation: none; }}
 
 @keyframes pulse {{
-    0% {{ opacity: 1; }} 50% {{ opacity: 0.45; }} 100% {{ opacity: 1; }}
+    0%, 100% {{ opacity: 1; transform: scale(1); }}
+    50%       {{ opacity: 0.4; transform: scale(0.85); }}
+}}
+
+/* Architecture flow */
+.arch-flow {{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    padding: 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin: 1rem 0;
+}}
+.arch-node {{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.7rem 1rem;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    min-width: 90px;
+    transition: all 150ms ease;
+}}
+.arch-node:hover {{
+    border-color: rgba(34,211,238,0.6);
+    background: rgba(34,211,238,0.06);
+    transform: translateY(-2px);
+}}
+.arch-node-icon {{ font-size: 1.5rem; }}
+.arch-node-label {{ font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }}
+.arch-node-tech {{ font-size: 0.68rem; color: var(--primary); font-weight: 600; }}
+.arch-arrow {{
+    color: var(--primary);
+    font-size: 1.2rem;
+    padding: 0 0.2rem;
+    opacity: 0.6;
+    flex-shrink: 0;
+}}
+
+/* Ticker row */
+.ticker-row {{
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}}
+.ticker-item {{
+    flex: 1 1 160px;
+    background: linear-gradient(145deg, var(--surface) 0%, var(--surface-alt) 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 0.9rem 1.1rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 150ms ease;
+}}
+.ticker-item:hover {{ border-color: rgba(34,211,238,0.45); transform: translateY(-2px); }}
+.ticker-sym {{ font-size: 0.75rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }}
+.ticker-price {{ font-size: 1.4rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.15rem 0; }}
+.ticker-up   {{ color: var(--up);   font-size: 0.82rem; font-weight: 700; }}
+.ticker-down {{ color: var(--down); font-size: 0.82rem; font-weight: 700; }}
+.ticker-bar {{
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 3px;
+    border-radius: 0 0 0 14px;
+    transition: width 600ms ease;
+}}
+
+/* Model comparison bar */
+.model-row {{
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(39,49,77,0.5);
+}}
+.model-row:last-child {{ border-bottom: none; }}
+.model-name {{ font-size: 0.82rem; font-weight: 700; min-width: 80px; color: var(--text); }}
+.model-bar-wrap {{ flex: 1; background: rgba(255,255,255,0.04); border-radius: 6px; height: 10px; overflow: hidden; }}
+.model-bar {{ height: 100%; border-radius: 6px; transition: width 800ms cubic-bezier(.2,.8,.2,1); }}
+.model-auc {{ font-size: 0.82rem; font-weight: 700; min-width: 50px; text-align: right; }}
+.model-best {{ color: var(--up); }}
+
+/* Navigation feature cards */
+.feat-card {{
+    background: linear-gradient(145deg, var(--surface) 0%, var(--surface-alt) 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.3rem 1.4rem;
+    height: 100%;
+    transition: all 180ms ease;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+}}
+.feat-card:hover {{
+    border-color: rgba(34,211,238,0.5);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}}
+.feat-card-emoji {{ font-size: 2rem; margin-bottom: 0.5rem; }}
+.feat-card-title {{ font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 0.3rem; }}
+.feat-card-desc {{ font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }}
+
+/* Proba gauge */
+.gauge-wrap {{
+    text-align: center;
+    padding: 1.2rem;
+}}
+.gauge-value {{
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1;
+}}
+.gauge-label {{
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 0.4rem;
 }}
 
 /* Badge for direction */
@@ -185,79 +354,116 @@ section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    padding: 0.18rem 0.55rem;
-    border-radius: 6px;
+    padding: 0.2rem 0.6rem;
+    border-radius: 8px;
     font-size: 0.75rem;
     font-weight: 700;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
 }}
-.badge-up   {{ color: var(--up);   background: {COLORS["up_soft"]}; }}
-.badge-down {{ color: var(--down); background: {COLORS["down_soft"]}; }}
-.badge-flat {{ color: var(--text-muted); background: rgba(148,163,184,0.16); }}
+.badge-up   {{ color: var(--up);   background: {COLORS["up_soft"]}; border: 1px solid rgba(16,185,129,0.3); }}
+.badge-down {{ color: var(--down); background: {COLORS["down_soft"]}; border: 1px solid rgba(239,68,68,0.3); }}
+.badge-flat {{ color: var(--text-muted); background: rgba(148,163,184,0.12); border: 1px solid rgba(148,163,184,0.2); }}
+.badge-flat-primary {{ color: var(--primary); background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); }}
 
-/* Section header (compact) */
+/* Section header */
 .section-head {{
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0.4rem 0 0.6rem 0;
+    margin: 0.6rem 0 0.8rem 0;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
 }}
 .section-head h2 {{ margin: 0 !important; }}
 
 /* Tab styling */
 button[data-baseweb="tab"] {{
     font-weight: 600 !important;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.01em !important;
 }}
 
 /* Streamlit metrics enhancements */
 [data-testid="stMetric"] {{
-    background: linear-gradient(180deg, var(--surface) 0%, var(--surface-alt) 100%);
+    background: linear-gradient(145deg, var(--surface) 0%, var(--surface-alt) 100%);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1rem 1.1rem;
+    border-radius: 16px;
+    padding: 1rem 1.2rem;
+    transition: all 150ms ease;
+}}
+[data-testid="stMetric"]:hover {{
+    border-color: rgba(34,211,238,0.4);
 }}
 [data-testid="stMetricLabel"] {{
     color: var(--text-muted) !important;
-    font-size: 0.78rem !important;
+    font-size: 0.75rem !important;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.07em;
+    font-weight: 600 !important;
 }}
 [data-testid="stMetricValue"] {{
-    font-weight: 700 !important;
-    font-size: 1.6rem !important;
+    font-weight: 800 !important;
+    font-size: 1.7rem !important;
+    letter-spacing: -0.02em !important;
 }}
 
 /* Buttons */
-button[kind="primary"], .stButton > button {{
+button[kind="primary"], .stButton > button[kind="primary"] {{
+    background: linear-gradient(135deg, #0EA5E9 0%, #22D3EE 100%) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    color: #0B1020 !important;
+    box-shadow: 0 4px 14px rgba(34,211,238,0.3) !important;
+}}
+.stButton > button {{
     border-radius: 10px !important;
     font-weight: 600 !important;
+    transition: all 150ms ease !important;
 }}
 
 /* DataFrame */
 [data-testid="stDataFrame"] {{
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 14px;
     overflow: hidden;
 }}
 
 /* Expander */
 [data-testid="stExpander"] {{
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--surface);
+    border: 1px solid var(--border) !important;
+    border-radius: 14px !important;
+    background: var(--surface) !important;
 }}
 
-/* Input rounding */
-.stTextInput input, .stSelectbox > div, .stNumberInput input,
-.stMultiSelect [data-baseweb="select"], .stSlider {{
+/* Inputs */
+.stTextInput input, .stNumberInput input {{
     border-radius: 10px !important;
+    background: var(--surface-alt) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
 }}
+.stSelectbox > div {{ border-radius: 10px !important; }}
+.stMultiSelect [data-baseweb="select"] {{ border-radius: 10px !important; }}
 
-/* Reduce gap between elements */
-.element-container {{ margin-bottom: 0.75rem; }}
+/* Divider */
+hr {{ border-color: var(--border) !important; margin: 1.2rem 0 !important; }}
 
-/* Hide default footer & menu, keep clean */
+/* Reduce gap */
+.element-container {{ margin-bottom: 0.6rem; }}
+
+/* Streamlit progress bar */
+.stProgress > div > div {{ border-radius: 999px !important; }}
+
+/* Scrollbar */
+::-webkit-scrollbar {{ width: 6px; }}
+::-webkit-scrollbar-track {{ background: transparent; }}
+::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 3px; }}
+::-webkit-scrollbar-thumb:hover {{ background: var(--text-muted); }}
+
+/* Toast */
+[data-testid="stToast"] {{ border-radius: 12px !important; }}
+
+/* Hide footer */
 footer {{ visibility: hidden; }}
 </style>
 """
