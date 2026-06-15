@@ -18,7 +18,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, VotingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
@@ -29,6 +29,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 from sklearn.model_selection import TimeSeriesSplit
+from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -80,18 +81,45 @@ def _build_dataset(cfg: TrainConfig) -> pd.DataFrame:
 
 
 def _build_models() -> dict[str, Pipeline]:
-    return {
-        "logreg": Pipeline([
-            ("scaler", StandardScaler()),
-            ("clf", LogisticRegression(max_iter=500, class_weight="balanced", C=0.5)),
-        ]),
-        "gbdt": Pipeline([
-            ("scaler", StandardScaler(with_mean=False)),
-            ("clf", GradientBoostingClassifier(
-                n_estimators=200, max_depth=3, learning_rate=0.05, subsample=0.85, random_state=42,
-            )),
-        ]),
-    }
+    logreg = Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", LogisticRegression(max_iter=500, class_weight="balanced", C=0.5)),
+    ])
+    gbdt = Pipeline([
+        ("scaler", StandardScaler(with_mean=False)),
+        ("clf", GradientBoostingClassifier(
+            n_estimators=200, max_depth=3, learning_rate=0.05, subsample=0.85, random_state=42,
+        )),
+    ])
+    rf = Pipeline([
+        ("scaler", StandardScaler(with_mean=False)),
+        ("clf", RandomForestClassifier(
+            n_estimators=200, max_depth=5, min_samples_leaf=10,
+            class_weight="balanced", random_state=42, n_jobs=-1,
+        )),
+    ])
+    mlp = Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", MLPClassifier(
+            hidden_layer_sizes=(64, 32), activation="relu",
+            learning_rate_init=0.001, max_iter=300,
+            early_stopping=True, validation_fraction=0.1,
+            random_state=42,
+        )),
+    ])
+    # Ensemble soft-voting des 3 meilleurs
+    voting = Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", VotingClassifier(
+            estimators=[
+                ("logreg", LogisticRegression(max_iter=500, class_weight="balanced", C=0.5)),
+                ("gbdt", GradientBoostingClassifier(n_estimators=200, max_depth=3, learning_rate=0.05, subsample=0.85, random_state=42)),
+                ("rf", RandomForestClassifier(n_estimators=200, max_depth=5, min_samples_leaf=10, class_weight="balanced", random_state=42, n_jobs=-1)),
+            ],
+            voting="soft",
+        )),
+    ])
+    return {"logreg": logreg, "gbdt": gbdt, "rf": rf, "mlp": mlp, "voting": voting}
 
 
 def _score_fold(y_true: np.ndarray, proba: np.ndarray) -> dict[str, float]:
