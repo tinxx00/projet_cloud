@@ -18,8 +18,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, VotingClassifier
+from sklearn.ensemble import AdaBoostClassifier, ExtraTreesClassifier, GradientBoostingClassifier, RandomForestClassifier, VotingClassifier
 from sklearn.linear_model import LogisticRegression
+from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
@@ -107,19 +109,48 @@ def _build_models() -> dict[str, Pipeline]:
             random_state=42,
         )),
     ])
-    # Ensemble soft-voting des 3 meilleurs
+    ada = Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", AdaBoostClassifier(
+            n_estimators=200, learning_rate=0.05, random_state=42,
+        )),
+    ])
+    et = Pipeline([
+        ("scaler", StandardScaler(with_mean=False)),
+        ("clf", ExtraTreesClassifier(
+            n_estimators=200, max_depth=5, min_samples_leaf=10,
+            class_weight="balanced", random_state=42, n_jobs=-1,
+        )),
+    ])
+    xgb = Pipeline([
+        ("scaler", StandardScaler(with_mean=False)),
+        ("clf", XGBClassifier(
+            n_estimators=200, max_depth=3, learning_rate=0.05,
+            subsample=0.85, colsample_bytree=0.8,
+            eval_metric="logloss", random_state=42, verbosity=0,
+        )),
+    ])
+    lgbm = Pipeline([
+        ("scaler", StandardScaler(with_mean=False)),
+        ("clf", LGBMClassifier(
+            n_estimators=200, max_depth=3, learning_rate=0.05,
+            subsample=0.85, colsample_bytree=0.8,
+            class_weight="balanced", random_state=42, verbosity=-1,
+        )),
+    ])
+    # Voting ensemble des meilleurs
     voting = Pipeline([
         ("scaler", StandardScaler()),
         ("clf", VotingClassifier(
             estimators=[
-                ("logreg", LogisticRegression(max_iter=500, class_weight="balanced", C=0.5)),
                 ("gbdt", GradientBoostingClassifier(n_estimators=200, max_depth=3, learning_rate=0.05, subsample=0.85, random_state=42)),
-                ("rf", RandomForestClassifier(n_estimators=200, max_depth=5, min_samples_leaf=10, class_weight="balanced", random_state=42, n_jobs=-1)),
+                ("xgb", XGBClassifier(n_estimators=200, max_depth=3, learning_rate=0.05, subsample=0.85, eval_metric="logloss", random_state=42, verbosity=0)),
+                ("lgbm", LGBMClassifier(n_estimators=200, max_depth=3, learning_rate=0.05, subsample=0.85, class_weight="balanced", random_state=42, verbosity=-1)),
             ],
             voting="soft",
         )),
     ])
-    return {"logreg": logreg, "gbdt": gbdt, "rf": rf, "mlp": mlp, "voting": voting}
+    return {"logreg": logreg, "gbdt": gbdt, "rf": rf, "mlp": mlp, "ada": ada, "et": et, "xgb": xgb, "lgbm": lgbm, "voting": voting}
 
 
 def _score_fold(y_true: np.ndarray, proba: np.ndarray) -> dict[str, float]:
