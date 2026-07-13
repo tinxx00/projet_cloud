@@ -17,6 +17,76 @@
 
 ---
 
+## ✅ État actuel du déploiement (compte `005311908836`, région `us-east-1`)
+
+Infrastructure **déployée et fiabilisée**. Les instances sont arrêtables/démarrables :
+il suffit de les **démarrer** pour tout remettre en ligne (auto-restart configuré).
+
+### Ressources
+
+| Rôle | Instance ID | Type | IP privée (stable) | IP publique |
+|---|---|---|---|---|
+| Dashboard | `i-0b69ac273cd470c4c` | t3.medium | `172.31.47.145` | **`100.57.180.116`** (Elastic IP fixe) |
+| Producer/Consumer | `i-01c87407f0e84d55d` | t3.medium | `172.31.33.252` | éphémère (change au restart) |
+| Kafka | `i-06a5ab05b5ee6eb59` | t3.medium | `172.31.40.72` | éphémère (change au restart) |
+
+- **Security group** : `sg-04474cf6f95d8d14b` (`pa-sg`) — ports 22, 8501, 8080, 9092, 29092.
+- **Clé SSH** : `~/Downloads/pa-key.pem`.
+- **S3** : `pa-market-data-005311908836`, `pa-athena-results-005311908836`.
+
+### URLs
+
+| Service | URL |
+|---|---|
+| **Dashboard** (IP fixe) | http://100.57.180.116:8501 |
+| **Kafka UI** | http://<IP_publique_kafka>:8080 |
+
+### 🚀 Procédure « 1-clic » — démarrer
+
+```bash
+aws ec2 start-instances --instance-ids \
+  i-06a5ab05b5ee6eb59 i-01c87407f0e84d55d i-0b69ac273cd470c4c
+```
+
+Grâce à la fiabilisation ci-dessous, tout remonte **automatiquement** en ~1-2 min :
+- **Kafka** : conteneurs Docker en `restart: unless-stopped`.
+- **Producer / Consumers** : services systemd `enable`d + `Restart=always`.
+- **Producer → Kafka** : via l'**IP privée stable** `172.31.40.72:9092` (survit aux stop/start).
+- **Dashboard** : accessible sur l'**Elastic IP fixe** `100.57.180.116:8501`.
+
+> Le dashboard-server exécute son **propre consumer** (groupe `dashboard-consumer`) pour
+> afficher les données live, indépendamment du producer-server.
+
+### 🛑 Arrêter (ne (presque) plus payer)
+
+```bash
+aws ec2 stop-instances --instance-ids \
+  i-06a5ab05b5ee6eb59 i-01c87407f0e84d55d i-0b69ac273cd470c4c
+```
+
+Coût en marche : ~0,12 $/h pour les 3 instances (~3 $/jour). Arrêtées : quasi nul (EBS + EIP).
+
+### 🔧 Fiabilisation appliquée (à refaire uniquement en cas de recréation)
+
+```bash
+# Kafka : auto-restart des conteneurs
+ssh -i ~/Downloads/pa-key.pem ec2-user@<IP_kafka> \
+  'cd ~ && sudo docker-compose up -d && sudo docker update --restart unless-stopped zookeeper kafka kafka-ui'
+
+# Producer/Consumer : auto-restart des services
+ssh -i ~/Downloads/pa-key.pem ec2-user@<IP_producer> \
+  'for s in finnhub-producer market-consumer; do sudo mkdir -p /etc/systemd/system/$s.service.d; \
+   printf "[Service]\nRestart=always\nRestartSec=10\n" | sudo tee /etc/systemd/system/$s.service.d/override.conf; done; \
+   sudo systemctl daemon-reload'
+
+# Mettre à jour le code sur une instance (dashboard/producer)
+ssh -i ~/Downloads/pa-key.pem ec2-user@<IP> \
+  'cd ~/PA && git fetch origin -q && git reset --hard origin/main && .venv/bin/pip install -q -r requirements.txt && \
+   sudo systemctl restart streamlit-dashboard'
+```
+
+---
+
 ## Prérequis
 
 - Compte AWS avec accès console/CLI
