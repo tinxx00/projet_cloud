@@ -21,6 +21,29 @@ Deux modes sont proposés :
 
 ---
 
+## 🐳 MODE DOCKER (tout-en-un, une seule commande)
+
+Lance **toute la stack** (Kafka + Producer + Consumer + Dashboard + Worker) d'un coup :
+
+```bash
+cp .env.example .env      # puis renseigner FINNHUB_API_KEY dans .env
+docker compose up -d --build
+```
+
+➡️ Dashboard : **http://localhost:8501** · Kafka UI : **http://localhost:8080**
+
+Pour tout arrêter :
+```bash
+docker compose down
+```
+
+> Nécessite **Docker Desktop**. La première construction prend quelques minutes
+> (installation des dépendances). Les données (`data/`) sont partagées entre les
+> conteneurs via un volume. Sans clé Finnhub, le dashboard tourne quand même sur
+> les données de démo — seule l'ingestion live nécessite la clé.
+
+---
+
 ## 🟢 MODE DÉMO (rapide, sans clé API)
 
 ### macOS / Linux

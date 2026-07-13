@@ -1,4 +1,23 @@
+# Stack complète : Kafka + Producer + Consumer + Dashboard + Worker d'alertes.
+# Lancement en une seule commande :  docker compose up -d --build
+# (nécessite un fichier .env — copier .env.example et renseigner FINNHUB_API_KEY)
+
+# Config commune aux services Python de l'application (image construite une fois)
+x-app: &app
+  build: .
+  image: marketpilot-app
+  env_file:
+    - .env
+  environment:
+    KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+  volumes:
+    - ./data:/app/data
+  depends_on:
+    - kafka
+  restart: unless-stopped
+
 services:
+  # ── Infrastructure Kafka ────────────────────────────────────────────────
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
     container_name: zookeeper
@@ -37,3 +56,26 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+
+  # ── Application ─────────────────────────────────────────────────────────
+  producer:
+    <<: *app
+    container_name: mp-producer
+    command: python -m producer.main
+
+  consumer:
+    <<: *app
+    container_name: mp-consumer
+    command: python -m consumer.main
+
+  dashboard:
+    <<: *app
+    container_name: mp-dashboard
+    ports:
+      - "8501:8501"
+    command: streamlit run src/dashboard/app.py --server.port=8501 --server.address=0.0.0.0
+
+  worker:
+    <<: *app
+    container_name: mp-worker
+    command: python -m alert_worker
