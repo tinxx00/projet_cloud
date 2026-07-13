@@ -59,11 +59,15 @@ def _signal_series(symbol: str) -> pd.DataFrame:
 
 
 def _verdict(proba: float) -> tuple[str, str, str, str]:
-    """(label, flèche, couleur, phrase) en langage client."""
-    if proba >= 0.53:
+    """(label, flèche, couleur, phrase) en langage client.
+
+    Bande neutre resserrée (48,5–51,5%) : le modèle produit des probabilités
+    proches de 0,50, on révèle les inclinaisons légères sans fausse certitude.
+    """
+    if proba >= 0.515:
         return ("Haussier", "▲", theme.COLORS["up"],
                 "L'IA penche vers une hausse à court terme.")
-    if proba <= 0.47:
+    if proba <= 0.485:
         return ("Baissier", "▼", theme.COLORS["down"],
                 "L'IA penche vers une baisse à court terme.")
     return ("Neutre", "•", theme.COLORS["warn"],

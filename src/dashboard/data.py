@@ -82,7 +82,9 @@ def _load_csv(path_str: str, signature: tuple[float, int]) -> pd.DataFrame:
         if col == "finnhub_timestamp" and pd.api.types.is_numeric_dtype(df[col]):
             df[col] = pd.to_datetime(df[col], unit="s", errors="coerce", utc=True)
         else:
-            df[col] = pd.to_datetime(df[col], errors="coerce", utc=True)
+            # format="ISO8601" gère les timestamps avec ET sans microsecondes
+            # (données démo vs live) sans coercer les uns en NaT.
+            df[col] = pd.to_datetime(df[col], format="ISO8601", errors="coerce", utc=True)
     if "ingested_at" in df.columns:
         df = df.sort_values("ingested_at")
     return df.reset_index(drop=True)

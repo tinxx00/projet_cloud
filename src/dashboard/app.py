@@ -104,7 +104,7 @@ with st.sidebar:
 
 nav = st.navigation(
     {
-        "Produit":          [pages["home"], pages["market"], pages["analysis"], pages["assistant"], pages["recommend"], pages["alerts"]],
+        "Produit":          [pages["home"], pages["market"], pages["analysis"], pages["recommend"]],
         "Compte":           [pages["profile"]],
         "Insights avancés": [pages["ml"], pages["pipeline"]],
         "Ressources":       [pages["guide"], pages["about"]],
@@ -112,6 +112,13 @@ nav = st.navigation(
     position="sidebar",
 )
 nav.run()
+
+# ── Widgets flottants : cloche (notifications) + Coach IA ─────────────────────
+try:
+    from dashboard import widgets
+    widgets.render_floating(user)
+except Exception:
+    pass
 
 with st.sidebar:
     st.markdown("<div style='margin-top:1rem;'></div>", unsafe_allow_html=True)

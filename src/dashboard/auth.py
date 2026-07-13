@@ -285,8 +285,30 @@ section[data-testid="stSidebar"] { display: none !important; }
 .lp-flow-arrow { display: flex; align-items: center; justify-content: center; color: var(--primary);
     font-size: 1.4rem; opacity: 0.75; min-width: 24px; }
 
+/* Essai gratuit + tarifs */
+.lp-trial { text-align: center; color: var(--text-muted); font-size: 0.86rem; margin: 0.6rem 0 0; }
+.lp-pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.4rem 0 1rem; align-items: stretch; }
+.lp-plan { background: linear-gradient(160deg, var(--surface), var(--surface-alt)); border: 1px solid var(--border);
+    border-radius: 18px; padding: 1.6rem 1.4rem; display: flex; flex-direction: column;
+    box-shadow: 0 6px 20px rgba(139,92,246,0.06); transition: transform 160ms ease, box-shadow 160ms ease; }
+.lp-plan:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(139,92,246,0.16); }
+.lp-plan.pop { border: 2px solid var(--primary); box-shadow: 0 16px 40px rgba(139,92,246,0.20); position: relative; }
+.lp-plan-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, #8B5CF6, #DB2777); color: #fff; font-size: 0.68rem; font-weight: 800;
+    padding: 0.25rem 0.85rem; border-radius: 999px; letter-spacing: 0.05em; white-space: nowrap; }
+.lp-plan-name { font-size: 1.05rem; font-weight: 800; color: var(--text); }
+.lp-plan-price { font-size: 2rem; font-weight: 900; color: var(--text); letter-spacing: -0.02em; margin: 0.4rem 0 0.1rem; }
+.lp-plan-price small { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+.lp-plan-sub { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; }
+.lp-plan-feats { list-style: none; padding: 0; margin: 0 0 1.2rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.lp-plan-feats li { font-size: 0.86rem; color: var(--text); display: flex; gap: 0.5rem; align-items: flex-start; }
+.lp-plan-feats li::before { content: '✓'; color: var(--up); font-weight: 800; }
+.lp-plan-cta { margin-top: auto; text-align: center; font-weight: 700; font-size: 0.9rem; padding: 0.65rem;
+    border-radius: 10px; background: rgba(139,92,246,0.1); color: var(--primary); border: 1px solid rgba(139,92,246,0.3); }
+.lp-plan.pop .lp-plan-cta { background: linear-gradient(135deg, #7C3AED, #A855F7); color: #fff; border: none; }
+
 @media (max-width: 900px) {
-    .lp-grid, .lp-stats, .lp-steps { grid-template-columns: 1fr; }
+    .lp-grid, .lp-stats, .lp-steps, .lp-pricing { grid-template-columns: 1fr; }
     .lp-title { font-size: 2.2rem; }
     .lp-flow { flex-direction: column; align-items: center; }
     .lp-flow-node { max-width: 320px; width: 100%; }
@@ -297,80 +319,28 @@ section[data-testid="stSidebar"] { display: none !important; }
 
 
 def _signal_bg() -> str:
-    """Arrière-plan : base pastel douce + courbes boursières lissées + frise de chandeliers."""
-    import math
-
-    W, H = 1440, 900
-    # ── Frise de chandeliers alignée en bas ────────────────────────────────
-    n = 46
-    top_band, bot_band = 600, 872
-    vals: list[float] = []
-    p = 0.0
-    for i in range(n):
-        p += math.sin(i * 0.5) * 1.0 + math.sin(i * 0.17) * 0.7 + 0.32
-        vals.append(p)
-    vmin, vmax = min(vals), max(vals)
-
-    def cy(v: float) -> float:
-        return bot_band - (v - vmin) / (vmax - vmin + 1e-9) * (bot_band - top_band)
-
-    step = W / n
-    cw = step * 0.42
-    candles: list[str] = []
-    for i in range(n):
-        cx = step * (i + 0.5)
-        c = vals[i]
-        o = vals[i - 1] if i > 0 else vals[i] - 0.5
-        col = "#10B981" if c >= o else "#F43F5E"
-        top = min(cy(o), cy(c))
-        bh = max(abs(cy(o) - cy(c)), 3.0)
-        candles.append(f'<line x1="{cx:.1f}" y1="{cy(max(o,c)+0.9):.1f}" x2="{cx:.1f}" y2="{cy(min(o,c)-0.9):.1f}" stroke="{col}" stroke-opacity="0.16" stroke-width="1.4"/>')
-        candles.append(f'<rect x="{cx-cw/2:.1f}" y="{top:.1f}" width="{cw:.1f}" height="{bh:.1f}" rx="1.5" fill="{col}" fill-opacity="0.13"/>')
-    candles_str = "".join(candles)
-
-    return f"""
+    """Arrière-plan corporate : grille de données très subtile + halos dégradés discrets."""
+    return """
     <div class="signal-bg-wrap">
-    <svg viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="130"/></filter>
-        <pattern id="dots" width="38" height="38" patternUnits="userSpaceOnUse">
-          <circle cx="2" cy="2" r="1.5" fill="#8B5CF6" fill-opacity="0.05"/>
+        <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="160"/></filter>
+        <pattern id="grid" width="46" height="46" patternUnits="userSpaceOnUse">
+          <path d="M46 0H0V46" fill="none" stroke="#7C3AED" stroke-opacity="0.045" stroke-width="1"/>
         </pattern>
-        <linearGradient id="arV" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#8B5CF6" stop-opacity="0.15"/>
-          <stop offset="1" stop-color="#8B5CF6" stop-opacity="0"/>
-        </linearGradient>
-        <linearGradient id="arP" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#DB2777" stop-opacity="0.11"/>
-          <stop offset="1" stop-color="#DB2777" stop-opacity="0"/>
-        </linearGradient>
-        <linearGradient id="flow" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#A855F7" stop-opacity="0"/>
-          <stop offset="0.5" stop-color="#A855F7" stop-opacity="0.45"/>
-          <stop offset="1" stop-color="#DB2777" stop-opacity="0.25"/>
-        </linearGradient>
       </defs>
-      <rect width="{W}" height="{H}" fill="url(#dots)"/>
-      <g filter="url(#soft)" opacity="0.42">
-        <circle cx="220" cy="160" r="230" fill="#C4B5FD"/>
-        <circle cx="1200" cy="120" r="250" fill="#F5C2E7"/>
-        <circle cx="1360" cy="720" r="210" fill="#A7F3D0"/>
-        <circle cx="120" cy="780" r="200" fill="#DDD6FE"/>
+
+      <!-- fine grille de données -->
+      <rect width="1440" height="900" fill="url(#grid)"/>
+
+      <!-- halos dégradés discrets dans les coins -->
+      <g filter="url(#soft)" opacity="0.30">
+        <circle cx="130" cy="40" r="320" fill="#C4B5FD"/>
+        <circle cx="1360" cy="880" r="320" fill="#F5C2E7"/>
       </g>
 
-      <path d="M-40,540 C 220,480 400,580 640,500 S 1080,400 1520,450 L1520,900 L-40,900 Z" fill="url(#arV)"/>
-      <path id="flowline" d="M-40,540 C 220,480 400,580 640,500 S 1080,400 1520,450"
-            fill="none" stroke="url(#flow)" stroke-width="2.5" stroke-linecap="round"/>
-      <path d="M-40,670 C 240,630 440,712 700,616 S 1160,548 1520,600 L1520,900 L-40,900 Z" fill="url(#arP)"/>
-      <path d="M-40,670 C 240,630 440,712 700,616 S 1160,548 1520,600"
-            fill="none" stroke="#DB2777" stroke-opacity="0.20" stroke-width="2" stroke-linecap="round"/>
-
-      {candles_str}
-
-      <circle r="5.5" fill="#A855F7" fill-opacity="0.9">
-        <animateMotion dur="14s" repeatCount="indefinite"><mpath href="#flowline"/></animateMotion>
-        <animate attributeName="r" values="4;7;4" dur="2.6s" repeatCount="indefinite"/>
-      </circle>
+      <!-- fine ligne d'accent horizontale -->
+      <line x1="0" y1="240" x2="1440" y2="240" stroke="#8B5CF6" stroke-opacity="0.05" stroke-width="1"/>
     </svg>
     </div>
     """
@@ -499,14 +469,16 @@ def render_login_page() -> None:
         unsafe_allow_html=True,
     )
 
-    # ── CTA central ────────────────────────────────────────────────────────
-    _a, cta_primary, cta_secondary, _b = st.columns([2, 1.5, 1.5, 2])
+    # ── CTA central (un seul bouton principal ; la connexion est en haut) ──
+    _a, cta_primary, _b = st.columns([2.6, 1.8, 2.6])
     with cta_primary:
         if st.button("🚀 Créer un compte gratuit", use_container_width=True, type="primary", key="hero_signup"):
             _signup_dialog()
-    with cta_secondary:
-        if st.button("J'ai déjà un compte", use_container_width=True, key="hero_login"):
-            _login_dialog()
+
+    st.markdown(
+        '<div class="lp-trial">✓ Essai gratuit 30 jours · sans carte bancaire · sans engagement</div>',
+        unsafe_allow_html=True,
+    )
 
     # ── Features ───────────────────────────────────────────────────────────
     st.markdown(
@@ -553,6 +525,47 @@ def render_login_page() -> None:
           <div class="lp-step"><div class="lp-step-n">3</div>
             <div class="lp-step-t">Décidez & agissez</div>
             <div class="lp-step-d">Recevez des alertes claires et des recommandations adaptées à vos objectifs.</div></div>
+        </div>
+
+        <div class="lp-section-title">Un essai gratuit, puis des offres simples</div>
+        <div class="lp-section-sub">Testez 30 jours gratuitement. Sans engagement, annulable à tout moment.</div>
+        <div class="lp-pricing">
+          <div class="lp-plan">
+            <div class="lp-plan-name">Découverte</div>
+            <div class="lp-plan-price">0€ <small>/ 30 jours</small></div>
+            <div class="lp-plan-sub">Pour tester la plateforme</div>
+            <ul class="lp-plan-feats">
+              <li>Tableau de bord temps réel</li>
+              <li>Signaux IA sur 3 actifs</li>
+              <li>1 alerte email</li>
+            </ul>
+            <div class="lp-plan-cta">Commencer l'essai gratuit</div>
+          </div>
+          <div class="lp-plan pop">
+            <div class="lp-plan-badge">LE PLUS POPULAIRE</div>
+            <div class="lp-plan-name">Pro</div>
+            <div class="lp-plan-price">9,99€ <small>/ mois</small></div>
+            <div class="lp-plan-sub">Pour l'investisseur régulier</div>
+            <ul class="lp-plan-feats">
+              <li>Tous les actifs suivis</li>
+              <li>Signaux IA illimités</li>
+              <li>Alertes email illimitées</li>
+              <li>Recommandations personnalisées</li>
+            </ul>
+            <div class="lp-plan-cta">Choisir Pro</div>
+          </div>
+          <div class="lp-plan">
+            <div class="lp-plan-name">Premium</div>
+            <div class="lp-plan-price">29,99€ <small>/ mois</small></div>
+            <div class="lp-plan-sub">Pour aller plus loin</div>
+            <ul class="lp-plan-feats">
+              <li>Tout le plan Pro</li>
+              <li>Coach IA illimité</li>
+              <li>Backtest & analyses avancées</li>
+              <li>Support prioritaire</li>
+            </ul>
+            <div class="lp-plan-cta">Choisir Premium</div>
+          </div>
         </div>
 
         <div class="lp-foot">© 2026 MarketPilot · Plateforme cloud d'analyse temps réel des marchés financiers</div>
