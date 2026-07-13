@@ -15,122 +15,62 @@ boursières temps réel, déployable en local ou sur AWS.
 - **Assistant LLM** : passerelle OpenAI / Anthropic / Groq configurable.
 - **Déploiement AWS** : EC2 (Kafka, producer/consumer, dashboard), SageMaker (entraînement), Athena (requêtes), CloudWatch (monitoring) — voir [`deploy/DEPLOIEMENT_AWS.md`](deploy/DEPLOIEMENT_AWS.md).
 
-> **Note historique** : ce README documente aussi, plus bas, la mise en route pas à pas
-> depuis l'ingestion (« Étape 1 ») jusqu'au ML.
+> 🚀 **Pour lancer le projet, suis [`LANCEMENT.md`](LANCEMENT.md).**
+> Il détaille pas à pas le mode démo (sans clé API) et le mode pipeline complet
+> (Kafka + producer + consumer + dashboard), ainsi que les alertes email.
+>
+> 📄 **Rapport complet (architecture, résultats ML, backtest, figures)** :
+> [`reports/RAPPORT.md`](reports/RAPPORT.md) · [`reports/RAPPORT.pdf`](reports/RAPPORT.pdf)
 
-> 🚀 **Pour lancer rapidement le projet, suis [`LANCEMENT.md`](LANCEMENT.md).**
-> Il contient toutes les commandes (mode démo sans clé API + mode pipeline complet).
-
-## 1) Prérequis
+## Prérequis
 - **Python 3.11, 3.12 ou 3.13** (⚠️ pas 3.14 : incompatible protobuf/streamlit)
 - Docker Desktop (uniquement pour le mode pipeline temps réel)
 - Clé API Finnhub (uniquement pour le mode pipeline temps réel)
 
-## 2) Configuration
-1. Copier le fichier d'environnement:
-   - `cp .env.example .env`
-2. Remplir `FINNHUB_API_KEY` dans `.env`
-3. Adapter `SYMBOLS` si nécessaire
+## Lancement rapide
 
-## 3) Lancer Kafka
+**Mode démo (sans clé API, sans Docker)**
 ```bash
-docker compose up -d
-```
-Kafka sera exposé sur `localhost:9092` et Kafka UI sur `http://localhost:8080`.
-
-## 4) Installer les dépendances Python
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-## 5) Lancer le producer
-```bash
-PYTHONPATH=src python -m producer.main
-```
-
-Chaque message publié contient:
-- `symbol`
-- `price_current`, `price_high`, `price_low`, `price_open`, `price_previous_close`
-- `finnhub_timestamp`
-- `ingested_at`
-- `source`
-
-En parallèle, les mêmes données sont sauvegardées dans `data/quotes_backup.csv`
-(chemin configurable via `BACKUP_CSV_PATH`).
-
-Pour éviter les répétitions inutiles, la déduplication des snapshots identiques
-est activée par défaut (`DEDUP_ENABLED=true`).
-
-Pour réduire les erreurs `429 Too Many Requests`, limite le débit via
-`FINNHUB_MAX_REQUESTS_PER_MINUTE` (ex: `20` ou `30` sur plan gratuit).
-
-## 6) Vérification
-- Ouvrir Kafka UI sur `http://localhost:8080`
-- Vérifier le topic `market.quotes.raw`
-- Observer les messages en temps réel
-
-## 7) Dashboard (Streamlit)
-Lancer le dashboard:
-```bash
+python scripts/seed_demo_data.py
 streamlit run src/dashboard/app.py
 ```
 
-Le dashboard lit en continu `data/quotes_backup.csv` (brut producer) et
-`data/processed_quotes.csv` (traité consumer), et expose plusieurs pages :
-**Accueil, Tendances, Opportunités, Coach IA, Activité, Recommandations,
-Assistant IA, Alertes, Mon compte**. L'accès requiert un compte (login/signup).
-
-Variables d'environnement optionnelles : `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` /
-`GROQ_API_KEY` (assistant LLM), SMTP pour les alertes email.
-
-## 8) Consumer Kafka + fallback CSV
-Lancer le consumer:
+**Mode pipeline complet (temps réel)**
 ```bash
-PYTHONPATH=src python -m consumer.main
+cp .env.example .env         # renseigner FINNHUB_API_KEY
+docker compose up -d         # Kafka (UI sur http://localhost:8080)
+PYTHONPATH=src python -m producer.main      # terminal A
+PYTHONPATH=src python -m consumer.main      # terminal B
+streamlit run src/dashboard/app.py          # terminal C
 ```
 
-Comportement:
-- le consumer lit en priorité le topic Kafka `market.quotes.raw`
-- si Kafka n'envoie plus de messages pendant `CONSUMER_FALLBACK_IDLE_SECONDS`,
-  il bascule temporairement sur `data/quotes_backup.csv`
-- les données traitées sont écrites dans `data/processed_quotes.csv`
+Le producer publie les cotations Finnhub sur le topic Kafka `market.quotes.raw`
+(backup `data/quotes_backup.csv`). Le consumer enrichit chaque tick
+(`delta_abs`, `delta_pct`, `direction`) vers `data/processed_quotes.csv`, avec
+fallback CSV si Kafka est silencieux. Détails, options et variables
+d'environnement : voir [`LANCEMENT.md`](LANCEMENT.md).
 
-Champs calculés en sortie:
-- `delta_abs = price_current - price_previous_close`
-- `delta_pct = delta_abs / price_previous_close * 100`
-- `direction` (`up`, `down`, `flat`, `unknown`)
+## Machine Learning
 
-## 9) Module ML - Signal directionnel court terme
-Le dashboard inclut un onglet "🤖 Analyse ML" qui charge un modèle entraîné
-sur historique long (yfinance) et appliqué soit sur les données du consumer
-en live, soit en backtest sur historique ancien.
-
-Entraîner le modèle (walk-forward CV, sélection automatique entre logreg et GBDT) :
+Ré-entraîner le modèle (walk-forward CV, comparaison de modèles, sélection auto) :
 ```bash
 PYTHONPATH=src python -m ml.train --symbols AAPL MSFT TSLA GOOGL AMZN \
     --period 10y --interval 1d --horizon 5 --threshold-bps 25
 ```
 
-Backtester out-of-sample (split temporel : 5 premières années en train, le reste en test) :
+Backtester out-of-sample (train sur les 5 premières années, test sur le reste,
+avec coûts de transaction, sans data leakage) :
 ```bash
 PYTHONPATH=src python -m ml.backtest --symbols AAPL MSFT TSLA GOOGL AMZN \
     --period 10y --train-years 5 --threshold 0.55 --cost-bps 2 \
     --horizon 5 --threshold-bps-label 25
 ```
 
-Le backtest n'utilise jamais le modèle de production (réentraîné sur tout l'historique)
-pour éviter le data leakage : il réentraîne un modèle frais sur la fenêtre d'entraînement
-puis prédit uniquement sur la fenêtre future, tient compte des coûts de transaction
-et compare le P&L de la stratégie au buy-and-hold.
-
-Sorties :
-- `data/models/direction_model.joblib`
-- `data/models/training_report.json`
-- `data/models/oof_predictions.csv`
-- `data/models/backtest_<SYMBOL>.csv`
-- `data/models/backtest_summary.json`
+Sorties dans `data/models/` : `direction_model.joblib`, `training_report.json`,
+`oof_predictions.csv`, `backtest_<SYMBOL>.csv`, `backtest_summary.json`.
+Résultats commentés et figures : [`reports/RAPPORT.md`](reports/RAPPORT.md).
 
 ## Arborescence
 - `src/producer/main.py`: boucle principale de streaming

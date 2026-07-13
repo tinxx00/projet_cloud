@@ -16,12 +16,11 @@ Comment fournir, via une architecture cloud scalable, une solution temps réel d
 - Contraintes de sécurité, coût, et simplicité de déploiement
 
 ## 4. Architecture détaillée
-![alt text](image.png)
 
 ### Schéma global
 
 ```
-[API Finnhub] → [Producer Kafka] → [Kafka (AWS MSK)] → [Consumer] → [Stockage S3/DB] → [Dashboard Streamlit/ML]
+[API Finnhub] → [Producer] → [Kafka (EC2)] → [Consumer] → [Stockage S3/CSV] → [Dashboard Streamlit + ML]
 ```
 
 ### Description des composants
@@ -30,18 +29,14 @@ Comment fournir, via une architecture cloud scalable, une solution temps réel d
 - **Consumer** : Consomme les messages Kafka, traite/filtre les données, les stocke (S3 et EC2).
 - **Stockage** : S3 (données brutes et traitées), éventuellement base SQL/NoSQL pour l’historique.
 - **Dashboard Streamlit** : Visualisation temps réel, filtres, graphiques, indicateurs clés.
-- **ML (EC2)** : Prédiction de tendance, affichage des résultats sur le dashboard.
-- **Sécurité** : IAM, VPC, gestion des secrets (AWS Secrets Manager).
+- **ML** : Entraînement sur SageMaker, inférence locale (modèle chargé par le dashboard).
+- **Sécurité** : IAM, security groups EC2, secrets hors dépôt (.env).
 - **Monitoring** : CloudWatch, logs, alertes.
 
-### Schéma d’architecture (exemple)
-
-![Schéma d’architecture](https://i.imgur.com/8Qw1QwF.png)
-
 ## 5. Justification de l’approche
-- **Scalabilité** : Kafka (MSK) et S3 permettent de gérer de gros volumes et des pics de charge.
+- **Scalabilité** : Kafka et S3 permettent de gérer de gros volumes et des pics de charge.
 - **Flexibilité** : Architecture modulaire, chaque composant peut évoluer indépendamment.
-- **Coût** : Utilisation de services managés (MSK, S3, SageMaker) pour optimiser le coût et la maintenance.
+- **Coût** : Utilisation de services managés (S3, SageMaker) pour optimiser le coût et la maintenance.
 - **Sécurité** : IAM, VPC, gestion des accès et des secrets.
 - **Évolutivité** : Possibilité d’ajouter d’autres sources de données, d’autres modèles ML, etc.
 
