@@ -159,7 +159,7 @@ def _profile_evolution_chart(initial_pref: float, fb_df: pd.DataFrame) -> None:
 
 
 def render() -> None:
-    theme.inject_css()
+    theme.inject_theme()
 
     # Utilise le user connecté si disponible, sinon session anonyme
     logged_user = auth.current_user()

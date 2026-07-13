@@ -12,7 +12,7 @@ import json
 
 REGION = "us-east-1"
 DATABASE = "pa_market"
-DATA_BUCKET = "pa-market-data-005311908836"
+s3://pa-athena-results-005311908836/DATA_BUCKET = "pa-market-data-005311908836"
 RESULTS_BUCKET = "pa-athena-results-005311908836"
 RESULTS_LOCATION = f"s3://{RESULTS_BUCKET}/"
 

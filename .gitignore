@@ -1,7 +1,19 @@
 .venv/
+.venv313/
 __pycache__/
 *.pyc
 .env
 .idea/
 .vscode/*.log
+
+# OS
+.DS_Store
+
+# Données brutes / traitées
 data/*.csv
+
+# Données sensibles (credentials, PII, logs runtime)
+data/users.json
+data/alerts_log.json
+data/user_feedback.csv
+data/athena_results.json

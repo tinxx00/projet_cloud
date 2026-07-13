@@ -6,6 +6,7 @@ et envoie un email à l'utilisateur abonné.
 from __future__ import annotations
 
 import json
+import os
 import smtplib
 import ssl
 from datetime import datetime, timezone
@@ -17,12 +18,118 @@ import pandas as pd
 
 ALERTS_LOG_PATH = Path("data/alerts_log.json")
 
-# ─── SMTP config (Gmail App Password recommandé) ──────────────────────────────
-# Mettre ces variables dans un fichier .env ou les passer en paramètre
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 465
-SMTP_USER = ""   # ex: "votre.app@gmail.com"
-SMTP_PASS = ""   # App Password Gmail
+# ─── Chargement .env ──────────────────────────────────────────────────────────
+def _load_env() -> None:
+    _here = Path(__file__).resolve()
+    candidates = [
+        Path.home() / "PA" / ".env",   # EC2 ~/PA/.env
+        _here.parents[3] / ".env",      # repo root
+        _here.parents[2] / ".env",      # src/
+        Path(".env"),                    # cwd
+    ]
+    for p in candidates:
+        if p.exists():
+            for line in p.read_text().splitlines():
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, _, v = line.partition("=")
+                    os.environ.setdefault(k.strip(), v.strip())
+            break
+
+_load_env()
+
+SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "465"))
+SMTP_USER = os.environ.get("SMTP_USER", "")
+SMTP_PASS = os.environ.get("SMTP_PASS", "")
+SMTP_FROM = os.environ.get("SMTP_FROM", SMTP_USER)
+_ANTISPAM_MINUTES = int(os.environ.get("ALERT_ANTISPAM_MINUTES", "5"))
+
+
+def smtp_configured() -> bool:
+    """True si les identifiants SMTP sont présents."""
+    return bool(SMTP_USER and SMTP_PASS)
+
+
+def _deliver(to_email: str, msg, smtp_user: str, smtp_pass: str) -> None:
+    """Envoie un message via SSL (465) ou STARTTLS (587/autre)."""
+    ctx = ssl.create_default_context()
+    sender = SMTP_FROM or smtp_user
+    if SMTP_PORT == 465:
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ctx) as server:
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(sender, to_email, msg.as_string())
+    else:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls(context=ctx)
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(sender, to_email, msg.as_string())
+
+
+def send_alerts_enabled_email(to_email: str, user_name: str, symbols: list[str],
+                              thr_up: float, thr_down: float) -> bool:
+    """Email de confirmation envoyé automatiquement quand l'utilisateur active ses alertes."""
+    if not smtp_configured():
+        return False
+    syms = ", ".join(symbols) if symbols else "aucun (ajoutez-en dans votre profil)"
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "🔔 Vos alertes MarketPilot sont activées"
+    msg["From"] = SMTP_FROM or SMTP_USER
+    msg["To"] = to_email
+    html = f"""
+    <html><body style="font-family:Arial,sans-serif;padding:2rem;color:#3B3560;">
+      <div style="max-width:500px;margin:auto;border:1px solid #E6DCF7;border-radius:14px;padding:1.8rem;">
+        <h2 style="color:#8B5CF6;margin-top:0;">💹 MarketPilot</h2>
+        <p>Bonjour <b>{user_name}</b>,</p>
+        <p>🔔 Vos <b>alertes email sont activées</b>. Vous serez prévenu automatiquement
+        dès qu'un signal fort est détecté par notre IA — sans avoir à ouvrir l'application.</p>
+        <div style="background:rgba(139,92,246,0.08);border:1px solid #E6DCF7;border-radius:10px;padding:1rem;margin:1rem 0;">
+          <div style="font-size:0.9rem;"><b>Actifs surveillés :</b> {syms}</div>
+          <div style="font-size:0.9rem;margin-top:0.4rem;"><b>Seuils :</b>
+            hausse ≥ {thr_up:.0%} · baisse ≤ {thr_down:.0%}</div>
+        </div>
+        <p style="color:#8983A6;font-size:0.8rem;">
+          Vous pouvez modifier ou désactiver vos alertes à tout moment dans « Mon compte ».<br>
+          <i>Les signaux sont fournis à titre informatif et ne constituent pas un conseil en investissement.</i>
+        </p>
+      </div>
+    </body></html>
+    """
+    msg.attach(MIMEText(html, "html"))
+    try:
+        _deliver(to_email, msg, SMTP_USER, SMTP_PASS)
+        return True
+    except Exception as e:
+        print(f"[alerts] Confirmation email error: {e}")
+        return False
+
+
+def send_test_email(to_email: str, user_name: str = "Utilisateur") -> tuple[bool, str]:
+    """Envoie un email de test pour vérifier la configuration SMTP."""
+    if not smtp_configured():
+        return False, "SMTP non configuré (SMTP_USER / SMTP_PASS manquants dans .env)."
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "✅ Test d'alerte — MarketPilot"
+    msg["From"] = SMTP_FROM or SMTP_USER
+    msg["To"] = to_email
+    html = f"""
+    <html><body style="font-family:Arial,sans-serif;padding:2rem;color:#3B3560;">
+      <div style="max-width:480px;margin:auto;border:1px solid #E6DCF7;border-radius:14px;padding:1.8rem;">
+        <h2 style="color:#8B5CF6;margin-top:0;">💹 MarketPilot</h2>
+        <p>Bonjour <b>{user_name}</b>,</p>
+        <p>✅ Votre configuration d'alertes email fonctionne correctement.<br>
+        Vous recevrez désormais un email dès qu'un signal fort est détecté sur vos actions.</p>
+        <p style="color:#8983A6;font-size:0.8rem;">Ceci est un message de test — aucune action requise.</p>
+      </div>
+    </body></html>
+    """
+    msg.attach(MIMEText(html, "html"))
+    try:
+        _deliver(to_email, msg, SMTP_USER, SMTP_PASS)
+        return True, f"Email de test envoyé à {to_email}."
+    except Exception as e:
+        return False, f"Échec de l'envoi : {e}"
+
 
 
 def _load_log() -> list:
@@ -39,8 +146,10 @@ def _save_log(log: list) -> None:
     ALERTS_LOG_PATH.write_text(json.dumps(log[-500:], indent=2, ensure_ascii=False))
 
 
-def _already_alerted(user_id: str, symbol: str, direction: str, window_minutes: int = 60) -> bool:
-    """Évite le spam : max 1 alerte par heure par user/symbole/direction."""
+def _already_alerted(user_id: str, symbol: str, direction: str, window_minutes: int | None = None) -> bool:
+    """Évite le spam : max 1 alerte par _ANTISPAM_MINUTES par user/symbole/direction."""
+    if window_minutes is None:
+        window_minutes = _ANTISPAM_MINUTES
     log = _load_log()
     now = datetime.now(timezone.utc)
     for entry in log:
@@ -82,9 +191,9 @@ def send_alert_email(to_email: str, user_name: str, symbol: str,
 
     subject = f"{emoji} Alerte {label} — {symbol} | Market Platform"
     html = f"""
-    <html><body style="font-family:Arial,sans-serif;background:#0B1020;color:#E2E8F0;padding:2rem;">
-    <div style="max-width:500px;margin:auto;background:#141A2E;border-radius:12px;padding:2rem;border:1px solid #27314D;">
-      <h2 style="color:#22D3EE;margin-top:0;">💹 Market Platform</h2>
+    <html><body style="font-family:Arial,sans-serif;background:#0C0A1F;color:#E2E8F0;padding:2rem;">
+    <div style="max-width:500px;margin:auto;background:#17132E;border-radius:12px;padding:2rem;border:1px solid #322A5C;">
+      <h2 style="color:#A855F7;margin-top:0;">💹 Market Platform</h2>
       <p>Bonjour <b>{user_name}</b>,</p>
       <div style="background:{color}22;border:1px solid {color};border-radius:8px;padding:1.2rem;margin:1.2rem 0;text-align:center;">
         <div style="font-size:2.5rem;">{emoji}</div>
@@ -108,10 +217,7 @@ def send_alert_email(to_email: str, user_name: str, symbol: str,
     msg.attach(MIMEText(html, "html"))
 
     try:
-        ctx = ssl.create_default_context()
-        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ctx) as server:
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(smtp_user, to_email, msg.as_string())
+        _deliver(to_email, msg, smtp_user, smtp_pass)
         return True
     except Exception as e:
         print(f"[alerts] Email error: {e}")
@@ -160,8 +266,77 @@ def check_and_alert(user: dict, predictions: dict[str, pd.DataFrame],
     return triggered
 
 
+def check_price_spikes(
+    user: dict,
+    processed_df: "pd.DataFrame",
+    spike_pct: float = 0.05,
+    window: int = 10,
+    smtp_user: str = SMTP_USER,
+    smtp_pass: str = SMTP_PASS,
+) -> list[dict]:
+    """
+    Détecte des pics de prix réels (sans ML) sur le CSV processed.
+
+    Un pic est détecté si le prix a varié de ±spike_pct % sur les `window`
+    dernières lignes pour un symbole. Anti-spam 60 min inclus.
+
+    Retourne la liste des alertes déclenchées (pour affichage toast).
+    """
+    alerts_cfg = user.get("alerts", {})
+    if not alerts_cfg.get("enabled"):
+        return []
+    if processed_df is None or processed_df.empty:
+        return []
+
+    uid = user["id"]
+    email = user["email"]
+    name = user.get("name", "Utilisateur")
+    symbols = alerts_cfg.get("symbols", [])
+    thr_up = float(alerts_cfg.get("spike_pct_up", spike_pct))
+    thr_down = float(alerts_cfg.get("spike_pct_down", spike_pct))
+
+    triggered = []
+    price_col = "price_current" if "price_current" in processed_df.columns else "price"
+    sym_col = "symbol" if "symbol" in processed_df.columns else None
+
+    for sym in symbols:
+        if sym_col:
+            sub = processed_df[processed_df[sym_col] == sym]
+        else:
+            sub = processed_df
+        if sub.empty or price_col not in sub.columns:
+            continue
+
+        prices = sub[price_col].dropna().astype(float)
+        if len(prices) < 2:
+            continue
+
+        recent = prices.iloc[-min(window, len(prices)):]
+        pct_change = (recent.iloc[-1] - recent.iloc[0]) / (recent.iloc[0] + 1e-9) * 100
+
+        if pct_change >= thr_up and not _already_alerted(uid, sym, "UP"):
+            sent = send_alert_email(email, name, sym, "UP", min(pct_change / 100, 1.0),
+                                    smtp_user, smtp_pass)
+            _log_alert(uid, sym, "UP", pct_change / 100, email)
+            triggered.append({
+                "symbol": sym, "direction": "UP",
+                "pct": round(pct_change, 2), "sent": sent,
+            })
+
+        elif pct_change <= -thr_down and not _already_alerted(uid, sym, "DOWN"):
+            sent = send_alert_email(email, name, sym, "DOWN", abs(pct_change) / 100,
+                                    smtp_user, smtp_pass)
+            _log_alert(uid, sym, "DOWN", abs(pct_change) / 100, email)
+            triggered.append({
+                "symbol": sym, "direction": "DOWN",
+                "pct": round(pct_change, 2), "sent": sent,
+            })
+
+    return triggered
+
+
 def get_alerts_log(user_id: str | None = None, limit: int = 50) -> list[dict]:
     log = _load_log()
     if user_id:
         log = [e for e in log if e.get("user_id") == user_id]
-    return log[-limit:]
+    return list(reversed(log))[:limit]

@@ -19,11 +19,23 @@ from ml.features import build_features
 MODEL_PATH = Path("data/models/direction_model.joblib")
 
 
+FEATURES = [
+    "ret_1", "ret_3", "ret_5", "ret_10", "vol_5", "vol_10",
+    "ema_fast_gap", "ema_slow_gap", "ema_cross", "rsi_14",
+    "macd", "macd_signal", "macd_hist", "bb_pct", "atr_pct",
+    "high_low_range", "close_to_high", "close_to_low", "volume_z", "momentum_10",
+]
+
+
 @lru_cache(maxsize=1)
 def _load_model_bundle() -> dict | None:
     if not MODEL_PATH.exists():
         return None
-    return joblib.load(MODEL_PATH)
+    obj = joblib.load(MODEL_PATH)
+    # Support bundle dict (SageMaker format) and plain Pipeline (local training)
+    if isinstance(obj, dict):
+        return obj
+    return {"model": obj, "feature_columns": FEATURES}
 
 
 def model_available() -> bool:

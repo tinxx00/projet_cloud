@@ -1,15 +1,30 @@
-# Pipeline boursier - Étape 1: Producer Finnhub vers Kafka
+# Plateforme Cloud d'Analyse Temps Réel des Marchés Financiers
 
-Ce workspace implémente la première étape de ton architecture:
-- récupération continue des cotations via l'API Finnhub
-- publication en flux JSON dans un topic Kafka
-- sauvegarde locale des quotes dans un fichier CSV (backup)
-- consommation des messages via un consumer avec fallback CSV
+Plateforme complète de collecte, traitement, prédiction et visualisation de données
+boursières temps réel, déployable en local ou sur AWS.
+
+**Pipeline :** `Finnhub → Producer → Kafka → Consumer → CSV/S3 → Dashboard Streamlit + ML`
+
+## Fonctionnalités
+- **Ingestion temps réel** : cotations Finnhub publiées en flux JSON sur Kafka, avec backup CSV et déduplication.
+- **Traitement** : consumer Kafka (fallback CSV) qui enrichit chaque tick (`delta_abs`, `delta_pct`, `direction`).
+- **Machine Learning** : prédiction de direction court terme (walk-forward CV, comparaison logreg/GBDT/RF/XGBoost/LightGBM, AutoML Optuna, backtest out-of-sample avec coûts).
+- **Dashboard Streamlit multi-pages** : Accueil, Tendances, Opportunités, Coach IA, Activité pipeline, Recommandations, Assistant IA (LLM), Alertes, Mon compte.
+- **Authentification** : login/signup, mots de passe hachés (PBKDF2 salé), préférences par utilisateur.
+- **Alertes** : notifications email sur seuils de probabilité ML.
+- **Assistant LLM** : passerelle OpenAI / Anthropic / Groq configurable.
+- **Déploiement AWS** : EC2 (Kafka, producer/consumer, dashboard), SageMaker (entraînement), Athena (requêtes), CloudWatch (monitoring) — voir [`deploy/DEPLOIEMENT_AWS.md`](deploy/DEPLOIEMENT_AWS.md).
+
+> **Note historique** : ce README documente aussi, plus bas, la mise en route pas à pas
+> depuis l'ingestion (« Étape 1 ») jusqu'au ML.
+
+> 🚀 **Pour lancer rapidement le projet, suis [`LANCEMENT.md`](LANCEMENT.md).**
+> Il contient toutes les commandes (mode démo sans clé API + mode pipeline complet).
 
 ## 1) Prérequis
-- Python 3.11+
-- Docker Desktop (macOS)
-- Clé API Finnhub
+- **Python 3.11, 3.12 ou 3.13** (⚠️ pas 3.14 : incompatible protobuf/streamlit)
+- Docker Desktop (uniquement pour le mode pipeline temps réel)
+- Clé API Finnhub (uniquement pour le mode pipeline temps réel)
 
 ## 2) Configuration
 1. Copier le fichier d'environnement:
@@ -56,21 +71,19 @@ Pour réduire les erreurs `429 Too Many Requests`, limite le débit via
 - Vérifier le topic `market.quotes.raw`
 - Observer les messages en temps réel
 
-## 7) Maquette dashboard (Streamlit)
+## 7) Dashboard (Streamlit)
 Lancer le dashboard:
 ```bash
 streamlit run src/dashboard/app.py
 ```
 
-Le dashboard lit en continu:
-- `data/quotes_backup.csv` (brut producer)
-- `data/processed_quotes.csv` (traité consumer)
+Le dashboard lit en continu `data/quotes_backup.csv` (brut producer) et
+`data/processed_quotes.csv` (traité consumer), et expose plusieurs pages :
+**Accueil, Tendances, Opportunités, Coach IA, Activité, Recommandations,
+Assistant IA, Alertes, Mon compte**. L'accès requiert un compte (login/signup).
 
-Le dashboard affiche:
-- métriques globales (lignes, symboles, dernière ingestion)
-- onglet **Marché**: courbe des prix par symbole
-- onglet **Indicateurs**: variations (%) et répartition `direction`
-- onglet **Tables**: derniers ticks enrichis (`delta_abs`, `delta_pct`, `ingestion_mode`)
+Variables d'environnement optionnelles : `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` /
+`GROQ_API_KEY` (assistant LLM), SMTP pour les alertes email.
 
 ## 8) Consumer Kafka + fallback CSV
 Lancer le consumer:

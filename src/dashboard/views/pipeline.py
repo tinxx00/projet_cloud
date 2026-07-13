@@ -75,9 +75,9 @@ _FLOW_CSS = """
   transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
 }
 .flow-step:hover {
-  border-color: rgba(34, 211, 238, 0.55);
+  border-color: rgba(168, 85, 247, 0.55);
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(34, 211, 238, 0.10);
+  box-shadow: 0 12px 28px rgba(168, 85, 247, 0.10);
 }
 .flow-step.is-live { border-color: rgba(16, 185, 129, 0.45); }
 .flow-step.is-idle { border-color: rgba(245, 158, 11, 0.45); }
@@ -112,10 +112,10 @@ _FLOW_CSS = """
   content: "";
   position: absolute; top: 50%; left: 0; right: 0; height: 2px;
   background: linear-gradient(90deg,
-    rgba(34,211,238,0) 0%,
-    rgba(34,211,238,0.55) 30%,
-    rgba(34,211,238,0.55) 70%,
-    rgba(34,211,238,0) 100%);
+    rgba(168, 85, 247,0) 0%,
+    rgba(168, 85, 247,0.55) 30%,
+    rgba(168, 85, 247,0.55) 70%,
+    rgba(168, 85, 247,0) 100%);
   transform: translateY(-50%);
 }
 .flow-arrow .pulse {

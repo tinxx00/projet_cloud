@@ -35,6 +35,13 @@ def process_quote(raw_quote: dict[str, Any], ingestion_mode: str) -> dict[str, A
         else:
             direction = "flat"
 
+    ingested_at = raw_quote.get("ingested_at")
+    if ingestion_mode == "csv_backup" or not ingested_at:
+        # En fallback, le CSV peut contenir des timestamps historiques.
+        # On marque l'heure réelle d'ingestion pour que la freshness UI
+        # reflète l'activité courante du pipeline.
+        ingested_at = datetime.now(timezone.utc).isoformat()
+
     return {
         "symbol": raw_quote.get("symbol"),
         "price_current": current,
@@ -43,7 +50,7 @@ def process_quote(raw_quote: dict[str, Any], ingestion_mode: str) -> dict[str, A
         "price_open": _to_float(raw_quote.get("price_open")),
         "price_previous_close": previous_close,
         "finnhub_timestamp": raw_quote.get("finnhub_timestamp"),
-        "ingested_at": raw_quote.get("ingested_at"),
+        "ingested_at": ingested_at,
         "source": raw_quote.get("source", "finnhub"),
         "ingestion_mode": ingestion_mode,
         "delta_abs": delta_abs,

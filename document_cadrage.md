@@ -16,6 +16,7 @@ Comment fournir, via une architecture cloud scalable, une solution temps réel d
 - Contraintes de sécurité, coût, et simplicité de déploiement
 
 ## 4. Architecture détaillée
+![alt text](image.png)
 
 ### Schéma global
 
@@ -24,12 +25,12 @@ Comment fournir, via une architecture cloud scalable, une solution temps réel d
 ```
 
 ### Description des composants
-- **Producer** : Récupère les données Finnhub et les publie sur Kafka (AWS MSK).
-- **Kafka (MSK)** : Assure la transmission temps réel et la résilience du flux de données.
-- **Consumer** : Consomme les messages Kafka, traite/filtre les données, les stocke (S3 ou base de données).
+- **Producer** : Récupère les données Finnhub et les publie sur Kafka (AWS EC2).
+- **Kafka (EC2)** : Assure la transmission temps réel et la résilience du flux de données.
+- **Consumer** : Consomme les messages Kafka, traite/filtre les données, les stocke (S3 et EC2).
 - **Stockage** : S3 (données brutes et traitées), éventuellement base SQL/NoSQL pour l’historique.
 - **Dashboard Streamlit** : Visualisation temps réel, filtres, graphiques, indicateurs clés.
-- **ML (SageMaker ou EC2)** : Prédiction de tendance, affichage des résultats sur le dashboard.
+- **ML (EC2)** : Prédiction de tendance, affichage des résultats sur le dashboard.
 - **Sécurité** : IAM, VPC, gestion des secrets (AWS Secrets Manager).
 - **Monitoring** : CloudWatch, logs, alertes.
 

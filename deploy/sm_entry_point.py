@@ -182,31 +182,64 @@ def aggregate(fold_scores):
 
 
 def load_history(symbols: list[str], period: str = "5y", interval: str = "1d") -> pd.DataFrame:
-    """Télécharge les données OHLCV via yfinance directement dans le container SageMaker.
-    
-    Pas besoin de canal S3 — yfinance télécharge depuis internet.
-    """
-    try:
-        import yfinance as yf
-    except ImportError:
-        raise ImportError("yfinance non installé — ajouter dans requirements.txt du container")
+    """Charge les données OHLCV depuis le canal SageMaker (DATA_DIR) ou yfinance en fallback."""
+    import glob
 
+    csv_files = glob.glob(str(DATA_DIR / "*.csv"))
     frames = []
-    for sym in symbols:
-        print(f"  Téléchargement {sym}...")
-        df = yf.download(sym, period=period, interval=interval, auto_adjust=True, progress=False)
-        if df.empty:
-            print(f"[warn] Pas de données pour {sym}, ignoré")
-            continue
-        # Aplatir MultiIndex si nécessaire
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
-        feats = build_features(df)
-        label = make_label(df)
-        merged = feats.copy()
-        merged["label"]  = label
-        merged["symbol"] = sym
-        frames.append(merged.dropna())
+
+    if csv_files:
+        # Lire depuis le canal S3 monté par SageMaker
+        print(f"[info] Lecture depuis canal S3: {len(csv_files)} fichiers CSV")
+        for fpath in sorted(csv_files):
+            sym = Path(fpath).stem.upper()
+            if sym not in [s.upper() for s in symbols]:
+                continue
+            df = pd.read_csv(fpath, index_col=0, parse_dates=True)
+            # yfinance >= 0.2.x peut avoir une 2ème ligne d'en-tête avec le ticker
+            # Détecter et supprimer si la 1ère ligne de données n'est pas numérique
+            if not df.empty and not pd.api.types.is_float_dtype(df.iloc[0]):
+                try:
+                    df.iloc[0].astype(float)
+                except (ValueError, TypeError):
+                    df = df.iloc[1:].copy()  # Sauter la ligne avec le nom du ticker
+                    df = df.apply(pd.to_numeric, errors="coerce")
+            if df.empty:
+                print(f"[warn] Fichier vide pour {sym}, ignoré")
+                continue
+            # Aplatir MultiIndex si nécessaire
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            # Normaliser les noms de colonnes
+            df.columns = [c.strip() for c in df.columns]
+            feats = build_features(df)
+            label = make_label(df)
+            merged = feats.copy()
+            merged["label"]  = label
+            merged["symbol"] = sym
+            frames.append(merged.dropna())
+            print(f"  {sym}: {len(merged.dropna())} lignes")
+    else:
+        # Fallback: yfinance (nécessite internet)
+        try:
+            import yfinance as yf
+        except ImportError:
+            raise ImportError("yfinance non installé — ajouter dans requirements.txt du container")
+        print(f"[info] Téléchargement via yfinance (fallback)...")
+        for sym in symbols:
+            df = yf.download(sym, period=period, interval=interval, auto_adjust=True, progress=False)
+            if df.empty:
+                print(f"[warn] Pas de données pour {sym}, ignoré")
+                continue
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            feats = build_features(df)
+            label = make_label(df)
+            merged = feats.copy()
+            merged["label"]  = label
+            merged["symbol"] = sym
+            frames.append(merged.dropna())
+
     if not frames:
         raise RuntimeError("Aucune donnée disponible pour les symboles demandés")
     return pd.concat(frames).sort_index()
@@ -220,12 +253,12 @@ def main():
     parser.add_argument("--n-splits",      type=int,   default=5)
     args = parser.parse_args()
 
-    symbols = [s.upper() for s in args.symbols]
+    symbols = [s.upper() for sym_arg in args.symbols for s in sym_arg.split()]
     print(f"[info] Symboles : {symbols}")
     print(f"[info] DATA_DIR : {DATA_DIR}")
     print(f"[info] MODEL_DIR: {MODEL_DIR}")
 
-    print(f"[info] Téléchargement des données via yfinance...")
+    print(f"[info] Chargement des données historiques...")
     df = load_history(symbols)
     print(f"[info] Dataset : {len(df):,} lignes | base rate={df['label'].mean():.3f}")
 

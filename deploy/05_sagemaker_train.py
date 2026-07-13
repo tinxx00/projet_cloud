@@ -26,20 +26,20 @@ import tempfile
 from pathlib import Path
 
 import boto3
-import yfinance as yf
-import pandas as pd
 
 # ─── À CONFIGURER ────────────────────────────────────────────────────────────
-BUCKET_NAME    = "c196829a5042926l14945956t1w321273741-sandboxbucket-cu3wzhwzpjaq"
+BUCKET_NAME    = "pa-market-data-005311908836"
 AWS_REGION     = "us-east-1"
-ROLE_ARN       = "arn:aws:iam::321273741000:role/c196829a5042926l14945956t1w3-SageMakerExecutionRole-e2QV54JUcPYH"
-DASHBOARD_EC2  = "3.88.114.74"
-SSH_KEY_PATH   = "~/Downloads/labsuser.pem"
+ROLE_ARN       = "arn:aws:iam::005311908836:role/PA-SageMakerRole"
+DASHBOARD_EC2  = "54.84.67.251"
+SSH_KEY_PATH   = "~/Downloads/pa-key.pem"
 SYMBOLS        = ["AAPL", "MSFT", "TSLA", "GOOGL", "AMZN"]
 JOB_PREFIX     = "market-direction"
-SKLEARN_VERSION = "1.2-1"                   # version SKLearn du container SageMaker
-PYTHON_VERSION  = "py3"
 INSTANCE_TYPE   = "ml.m5.large"             # ← Sans GPU, suffisant pour SKLearn
+# Image container figée (celle du dernier job réussi) — évite les soucis de version
+IMAGE_URI       = "683313688378.dkr.ecr.us-east-1.amazonaws.com/sagemaker-scikit-learn:1.4-2-py312-cpu-py3"
+# Copier le modèle vers l'EC2 dashboard ? (False si l'instance est arrêtée)
+DEPLOY_TO_EC2   = False
 # ─────────────────────────────────────────────────────────────────────────────
 
 S3_DATA_PREFIX  = f"{JOB_PREFIX}/training-data"
@@ -47,8 +47,10 @@ S3_MODEL_PREFIX = f"{JOB_PREFIX}/model-artifacts"
 LOCAL_MODEL_DIR = Path("data/models")
 
 
-def download_ohlcv(symbols: list[str], period: str = "5y", interval: str = "1d") -> dict[str, pd.DataFrame]:
+def download_ohlcv(symbols: list[str], period: str = "5y", interval: str = "1d"):
     """Télécharge les données OHLCV via yfinance."""
+    import yfinance as yf
+    import pandas as pd
     result = {}
     for sym in symbols:
         print(f"  Téléchargement {sym}...")
@@ -63,8 +65,9 @@ def download_ohlcv(symbols: list[str], period: str = "5y", interval: str = "1d")
     return result
 
 
-def upload_training_data(s3_client, data: dict[str, pd.DataFrame]) -> str:
+def upload_training_data(s3_client, data) -> str:
     """Upload un CSV par symbole dans S3, retourne le s3_uri du dossier."""
+    import pandas as pd
     with tempfile.TemporaryDirectory() as tmpdir:
         for sym, df in data.items():
             csv_path = Path(tmpdir) / f"{sym}.csv"
@@ -92,8 +95,8 @@ def launch_training_job(s3_training_uri: str) -> str:
         role=ROLE_ARN,
         instance_type=INSTANCE_TYPE,
         instance_count=1,
-        framework_version=SKLEARN_VERSION,
-        py_version=PYTHON_VERSION,
+        framework_version="1.2-1",   # ignoré car image_uri est fourni
+        image_uri=IMAGE_URI,
         output_path=f"s3://{BUCKET_NAME}/{S3_MODEL_PREFIX}",
         sagemaker_session=sess,
         base_job_name=JOB_PREFIX,
@@ -183,12 +186,19 @@ def main():
     print("\n=== [2/3] Téléchargement du modèle depuis S3 ===")
     local_model_dir = download_model(s3, model_s3_uri)
 
-    # 3. Déployer sur l'EC2 dashboard du Big Data sandbox
-    print("\n=== [3/3] Déploiement sur EC2 dashboard ===")
-    deploy_to_dashboard_ec2(local_model_dir)
+    # 3. Déployer sur l'EC2 dashboard (optionnel — désactivé si instance arrêtée)
+    if DEPLOY_TO_EC2:
+        print("\n=== [3/3] Déploiement sur EC2 dashboard ===")
+        try:
+            deploy_to_dashboard_ec2(local_model_dir)
+            print(f"   Dashboard : http://{DASHBOARD_EC2}:8501")
+        except Exception as e:
+            print(f"[warn] Copie vers EC2 échouée (instance arrêtée ?) : {e}")
+    else:
+        print("\n=== [3/3] Copie EC2 désactivée (DEPLOY_TO_EC2=False) ===")
+        print(f"   Modèle disponible en local : {local_model_dir}/")
 
     print("\n✅ Pipeline SageMaker terminé !")
-    print(f"   Dashboard : http://{DASHBOARD_EC2}:8501")
 
 
 if __name__ == "__main__":

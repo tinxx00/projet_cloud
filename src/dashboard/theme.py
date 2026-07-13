@@ -12,24 +12,24 @@ import streamlit as st
 # Color tokens
 # ---------------------------------------------------------------------------
 COLORS = {
-    "bg": "#0B1020",
-    "surface": "#141A2E",
-    "surface_alt": "#1B2238",
-    "border": "#27314D",
-    "text": "#E2E8F0",
-    "text_muted": "#94A3B8",
-    "primary": "#22D3EE",
-    "primary_soft": "rgba(34, 211, 238, 0.18)",
-    "up": "#10B981",
-    "up_soft": "rgba(16, 185, 129, 0.16)",
-    "down": "#EF4444",
-    "down_soft": "rgba(239, 68, 68, 0.16)",
-    "warn": "#F59E0B",
-    "warn_soft": "rgba(245, 158, 11, 0.16)",
+    "bg": "#F6F3FC",
+    "surface": "#FFFFFF",
+    "surface_alt": "#F0EAFB",
+    "border": "#E6DCF7",
+    "text": "#3B3560",
+    "text_muted": "#8983A6",
+    "primary": "#8B5CF6",
+    "primary_soft": "rgba(139, 92, 246, 0.12)",
+    "up": "#059669",
+    "up_soft": "rgba(5, 150, 105, 0.14)",
+    "down": "#F43F5E",
+    "down_soft": "rgba(244, 63, 94, 0.14)",
+    "warn": "#D97706",
+    "warn_soft": "rgba(217, 119, 6, 0.14)",
 }
 
 
-PLOTLY_TEMPLATE = "plotly_dark"
+PLOTLY_TEMPLATE = "plotly_white"
 
 
 def plotly_layout(**overrides) -> dict:
@@ -91,7 +91,7 @@ h3 {{ font-size: 1.05rem !important; color: var(--text-muted) !important; }}
 
 /* Sidebar polish */
 section[data-testid="stSidebar"] {{
-    background: linear-gradient(180deg, #0E1428 0%, #0B1020 100%);
+    background: linear-gradient(180deg, #FFFFFF 0%, #F0EAFB 100%);
     border-right: 1px solid var(--border);
 }}
 section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
@@ -104,7 +104,7 @@ section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 1.2rem 1.4rem;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.22), 0 1px 0 rgba(255,255,255,0.03) inset;
+    box-shadow: 0 6px 20px rgba(139,92,246,0.08), 0 1px 0 rgba(255,255,255,0.6) inset;
     transition: transform 150ms cubic-bezier(.2,.8,.2,1), border-color 150ms ease, box-shadow 150ms ease;
     position: relative;
     overflow: hidden;
@@ -114,14 +114,14 @@ section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(34,211,238,0.3), transparent);
+    background: linear-gradient(90deg, transparent, rgba(168, 85, 247,0.3), transparent);
     opacity: 0;
     transition: opacity 150ms ease;
 }}
 .card:hover {{
-    border-color: rgba(34, 211, 238, 0.5);
+    border-color: rgba(168, 85, 247, 0.5);
     transform: translateY(-3px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(34,211,238,0.1);
+    box-shadow: 0 12px 30px rgba(139,92,246,0.16), 0 0 0 1px rgba(139,92,246,0.12);
 }}
 .card:hover::before {{ opacity: 1; }}
 
@@ -151,7 +151,7 @@ section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
 
 /* Gradient text */
 .gtext {{
-    background: linear-gradient(135deg, #22D3EE 0%, #818CF8 50%, #A78BFA 100%);
+    background: linear-gradient(135deg, #A855F7 0%, #E879F9 50%, #F0ABFC 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -160,8 +160,8 @@ section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
 /* Hero header */
 .hero {{
     background:
-        radial-gradient(ellipse 80% 60% at 0% 0%, rgba(34,211,238,0.15) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(129,140,248,0.12) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 60% at 0% 0%, rgba(168, 85, 247,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(232, 121, 249,0.12) 0%, transparent 50%),
         linear-gradient(180deg, var(--surface) 0%, var(--surface-alt) 100%);
     border: 1px solid var(--border);
     border-radius: 20px;
@@ -180,14 +180,14 @@ section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent 0%, rgba(34,211,238,0.6) 50%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, rgba(168, 85, 247,0.6) 50%, transparent 100%);
 }}
 .hero-title {{
     font-size: 1.75rem;
     font-weight: 900;
     margin: 0;
     letter-spacing: -0.03em;
-    background: linear-gradient(135deg, #E2E8F0 0%, #94A3B8 100%);
+    background: linear-gradient(135deg, #7C3AED 0%, #DB2777 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -204,7 +204,7 @@ section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
     font-size: 0.78rem;
     font-weight: 700;
     border: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(139, 92, 246, 0.05);
     letter-spacing: 0.04em;
 }}
 .pill-dot {{
@@ -249,8 +249,8 @@ section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
     transition: all 150ms ease;
 }}
 .arch-node:hover {{
-    border-color: rgba(34,211,238,0.6);
-    background: rgba(34,211,238,0.06);
+    border-color: rgba(168, 85, 247,0.6);
+    background: rgba(168, 85, 247,0.06);
     transform: translateY(-2px);
 }}
 .arch-node-icon {{ font-size: 1.5rem; }}
@@ -281,7 +281,7 @@ section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
     overflow: hidden;
     transition: all 150ms ease;
 }}
-.ticker-item:hover {{ border-color: rgba(34,211,238,0.45); transform: translateY(-2px); }}
+.ticker-item:hover {{ border-color: rgba(168, 85, 247,0.45); transform: translateY(-2px); }}
 .ticker-sym {{ font-size: 0.75rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }}
 .ticker-price {{ font-size: 1.4rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.15rem 0; }}
 .ticker-up   {{ color: var(--up);   font-size: 0.82rem; font-weight: 700; }}
@@ -322,9 +322,9 @@ section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
     overflow: hidden;
 }}
 .feat-card:hover {{
-    border-color: rgba(34,211,238,0.5);
+    border-color: rgba(168, 85, 247,0.5);
     transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    box-shadow: 0 14px 34px rgba(139,92,246,0.18);
 }}
 .feat-card-emoji {{ font-size: 2rem; margin-bottom: 0.5rem; }}
 .feat-card-title {{ font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 0.3rem; }}
@@ -363,7 +363,7 @@ section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
 .badge-up   {{ color: var(--up);   background: {COLORS["up_soft"]}; border: 1px solid rgba(16,185,129,0.3); }}
 .badge-down {{ color: var(--down); background: {COLORS["down_soft"]}; border: 1px solid rgba(239,68,68,0.3); }}
 .badge-flat {{ color: var(--text-muted); background: rgba(148,163,184,0.12); border: 1px solid rgba(148,163,184,0.2); }}
-.badge-flat-primary {{ color: var(--primary); background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); }}
+.badge-flat-primary {{ color: var(--primary); background: rgba(168, 85, 247,0.1); border: 1px solid rgba(168, 85, 247,0.3); }}
 
 /* Section header */
 .section-head {{
@@ -391,7 +391,7 @@ button[data-baseweb="tab"] {{
     transition: all 150ms ease;
 }}
 [data-testid="stMetric"]:hover {{
-    border-color: rgba(34,211,238,0.4);
+    border-color: rgba(168, 85, 247,0.4);
 }}
 [data-testid="stMetricLabel"] {{
     color: var(--text-muted) !important;
@@ -408,12 +408,12 @@ button[data-baseweb="tab"] {{
 
 /* Buttons */
 button[kind="primary"], .stButton > button[kind="primary"] {{
-    background: linear-gradient(135deg, #0EA5E9 0%, #22D3EE 100%) !important;
+    background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%) !important;
     border: none !important;
     border-radius: 10px !important;
     font-weight: 700 !important;
-    color: #0B1020 !important;
-    box-shadow: 0 4px 14px rgba(34,211,238,0.3) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 14px rgba(139, 92, 246,0.35) !important;
 }}
 .stButton > button {{
     border-radius: 10px !important;
@@ -462,6 +462,125 @@ hr {{ border-color: var(--border) !important; margin: 1.2rem 0 !important; }}
 
 /* Toast */
 [data-testid="stToast"] {{ border-radius: 12px !important; }}
+
+/* ── Aurora background (subtil, sur toutes les pages) ──────────────────── */
+[data-testid="stAppViewContainer"] {{
+    background:
+        radial-gradient(ellipse 55% 45% at 8% -8%, rgba(196,181,253,0.50) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 42% at 98% 4%, rgba(249,168,212,0.42) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 50% at 55% 110%, rgba(167,243,208,0.30) 0%, transparent 55%),
+        var(--bg);
+    background-attachment: fixed;
+}}
+
+/* ── Animation d'entrée (éléments statiques uniquement) ───────────────── */
+@keyframes fadeInUp {{
+    from {{ opacity: 0; transform: translateY(12px); }}
+    to   {{ opacity: 1; transform: translateY(0); }}
+}}
+.hero, .feat-card, .auth-panel, .arch-flow, .landing-brand, .landing-h1, .landing-lead {{
+    animation: fadeInUp 480ms cubic-bezier(.2,.8,.2,1) both;
+}}
+.feat-card:nth-child(2) {{ animation-delay: 60ms; }}
+.feat-card:nth-child(3) {{ animation-delay: 120ms; }}
+
+/* ── Navigation sidebar : hover + onglet actif ────────────────────────── */
+[data-testid="stSidebarNav"] ul {{ gap: 2px; }}
+[data-testid="stSidebarNavLink"] {{
+    border-radius: 10px !important;
+    padding: 0.5rem 0.7rem !important;
+    border: 1px solid transparent !important;
+    transition: background 140ms ease, border-color 140ms ease !important;
+}}
+[data-testid="stSidebarNavLink"]:hover {{
+    background: rgba(168, 85, 247,0.08) !important;
+    border-color: rgba(168, 85, 247,0.20) !important;
+}}
+[data-testid="stSidebarNavLink"][aria-current="page"] {{
+    background: linear-gradient(135deg, rgba(168, 85, 247,0.18), rgba(232, 121, 249,0.12)) !important;
+    border-color: rgba(168, 85, 247,0.35) !important;
+}}
+[data-testid="stSidebarNavLink"][aria-current="page"] span {{
+    color: var(--text) !important; font-weight: 700 !important;
+}}
+
+/* ── Boutons primaires : glow au survol ───────────────────────────────── */
+button[kind="primary"]:hover, .stButton > button[kind="primary"]:hover {{
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(168, 85, 247,0.45) !important;
+}}
+
+/* ── Barre d'accent sur les titres de section ─────────────────────────── */
+.section-head h2 {{ position: relative; padding-left: 0.7rem; }}
+.section-head h2::before {{
+    content: ''; position: absolute; left: 0; top: 14%; bottom: 14%;
+    width: 3px; border-radius: 3px;
+    background: linear-gradient(180deg, #A855F7, #E879F9);
+}}
+
+/* ── Logo / marque ────────────────────────────────────────────────────── */
+.brand-mark {{
+    width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
+    background: linear-gradient(135deg, #8B5CF6 0%, #DB2777 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 20px rgba(139,92,246,0.35);
+}}
+.brand-name {{
+    font-size: 1.5rem; font-weight: 900; letter-spacing: -0.02em; line-height: 1;
+    background: linear-gradient(135deg, #7C3AED, #DB2777);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}}
+.brand-tag {{ font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.14em; text-transform: uppercase; margin-top: 0.15rem; }}
+
+/* ── Grille de tuiles uniformes ───────────────────────────────────────── */
+.tile-grid {{ display: grid; gap: 0.9rem; margin-bottom: 0.5rem; }}
+.tile-grid.cols-4 {{ grid-template-columns: repeat(4, 1fr); }}
+.tile-grid.cols-5 {{ grid-template-columns: repeat(5, 1fr); }}
+
+.tile {{
+    background: linear-gradient(150deg, var(--surface) 0%, var(--surface-alt) 100%);
+    border: 1px solid var(--border); border-radius: 16px;
+    padding: 1.05rem 1.15rem; min-height: 116px;
+    display: flex; flex-direction: column; gap: 0.2rem;
+    box-shadow: 0 4px 16px rgba(139,92,246,0.06);
+    transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}}
+.tile:hover {{ transform: translateY(-3px); border-color: rgba(139,92,246,0.45);
+    box-shadow: 0 12px 26px rgba(139,92,246,0.14); }}
+.tile-label {{ font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--text-muted); }}
+.tile-value {{ font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text); line-height: 1.15; }}
+.tile-sub {{ font-size: 0.77rem; color: var(--text-muted); margin-top: auto; }}
+
+/* Tuile "lanceur d'application" */
+.app-tile {{
+    background: linear-gradient(150deg, var(--surface) 0%, var(--surface-alt) 100%);
+    border: 1px solid var(--border); border-radius: 16px;
+    padding: 1.1rem; min-height: 138px;
+    display: flex; flex-direction: column; gap: 0.5rem;
+    box-shadow: 0 4px 16px rgba(139,92,246,0.06);
+    transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}}
+.app-tile:hover {{ transform: translateY(-4px); border-color: rgba(139,92,246,0.5);
+    box-shadow: 0 14px 30px rgba(139,92,246,0.16); }}
+.app-ic {{ width: 40px; height: 40px; border-radius: 12px; display: flex;
+    align-items: center; justify-content: center; font-size: 1.25rem; }}
+.app-t {{ font-size: 0.95rem; font-weight: 800; color: var(--text); }}
+.app-d {{ font-size: 0.76rem; color: var(--text-muted); line-height: 1.4; }}
+
+@media (max-width: 1100px) {{
+    .tile-grid.cols-4, .tile-grid.cols-5 {{ grid-template-columns: repeat(2, 1fr); }}
+}}
+
+/* ── Logo sidebar (st.logo) ────────────────────────────────────────────── */
+[data-testid="stLogo"] {{
+    height: 2.5rem !important; width: auto !important;
+    margin: 0.4rem 0 0.4rem 0.15rem !important;
+}}
+[data-testid="stSidebarHeader"] {{
+    padding-top: 0.6rem !important; padding-bottom: 0.2rem !important;
+}}
 
 /* Hide footer */
 footer {{ visibility: hidden; }}
