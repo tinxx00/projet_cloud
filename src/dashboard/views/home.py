@@ -36,16 +36,18 @@ _APPS = [
 def _header(pill_html: str, ts_str: str) -> None:
     st.markdown(
         f"""<div class="hero">
-          <div style="display:flex;align-items:center;gap:0.85rem;">
-            <div class="brand-mark">{_LOGO_SVG}</div>
-            <div>
-              <div class="brand-name">MarketPilot</div>
-              <div class="brand-tag">Invest smarter · Analyse temps réel</div>
+          <div style="display:flex;align-items:center;gap:1rem;flex:1 1 300px;min-width:0;">
+            <div class="brand-mark" style="width:56px;height:56px;">{_LOGO_SVG}</div>
+            <div style="min-width:0;">
+              <div class="hero-title" style="font-size:2rem;margin:0;">MarketPilot</div>
+              <div style="color:var(--text-muted);font-size:0.95rem;margin-top:0.15rem;">
+                Analyse boursière <b style="color:var(--primary);">temps réel</b> · propulsée par l'IA
+              </div>
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem;">
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.45rem;flex-shrink:0;">
             {pill_html}
-            <span style="color:var(--text-muted);font-size:0.78rem;">⏱ {ts_str}</span>
+            <span style="color:var(--text-muted);font-size:0.78rem;white-space:nowrap;">⏱ {ts_str}</span>
           </div>
         </div>""",
         unsafe_allow_html=True,
