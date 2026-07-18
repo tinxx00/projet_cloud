@@ -181,10 +181,7 @@ def render() -> None:
         df = data_module.load_quotes(data_module.RAW_DATA_PATH)
     symbols = sorted(df["symbol"].dropna().unique().tolist()) if "symbol" in df.columns else []
 
-    # ── Rangée 1 : KPIs (tuiles identiques) ──────────────────────────────
-    _kpi_tiles(proc_status.rows, raw_status.rows, symbols, last)
-
-    # ── Rangée 2 : cours en direct (tuiles identiques) ───────────────────
+    # ── Cours en direct (tuiles identiques) ──────────────────────────────
     theme.section_header("📡 Cours en direct", "Variation sur les derniers ticks")
     _ticker_tiles(df)
 
